@@ -19,7 +19,7 @@ struct AvatarView: View {
                     .aspectRatio(1, contentMode: .fit)
                     .clipShape(Circle())
             } else {
-                Image(systemName: "person.circle.fill")
+                Image(systemName: "person.circle")
                     .resizable()
                     .foregroundStyle(.secondary)
             }

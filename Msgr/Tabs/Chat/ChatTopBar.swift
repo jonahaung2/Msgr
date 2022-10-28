@@ -16,6 +16,9 @@ struct ChatTopBar: View {
         VStack(spacing: 0) {
             HStack(alignment: .top) {
                 Button {
+                    if !viewModel.con.hasMsgs && viewModel.con.lastMsg() != nil {
+                        viewModel.con.hasMsgs = true
+                    }
                     viewModel.con.objectWillChange.send()
                     dismiss()
                 } label: {
@@ -41,7 +44,7 @@ struct ChatTopBar: View {
 
                 Spacer()
                 Button {
-
+                    viewModel.simulatePushNoti()
                 } label: {
                     Image(systemName: "phone.fill")
                         .imageScale(.large)

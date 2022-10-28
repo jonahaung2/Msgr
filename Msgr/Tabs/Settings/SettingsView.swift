@@ -31,25 +31,23 @@ struct SettingsView: View {
 
          Section {
             FormCell2 {
-               Text("Staff ID")
+               Text("Phone Number")
             } right: {
-               Text("1519")
+                Text(authenticator.user?.phoneNumber ?? "")
             }
             .tapToPush(Text("Edit Staff ID"))
 
             FormCell2 {
                Text("Name")
             } right: {
-               Text("John Doe")
+                Text(authenticator.user?.displayName ?? authenticator.user?.uid ?? "")
 
             }.tapToPush(Text("Edit User Name"))
          }
 
          Section {
             ConfirmButton(title: "Sign Out") {
-               Task {
-                  await authenticator.signOut()
-               }
+                authenticator.signOut()
             } label: {
                Text("Sign Out")
             }

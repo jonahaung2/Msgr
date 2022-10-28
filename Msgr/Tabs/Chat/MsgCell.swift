@@ -51,8 +51,12 @@ struct MsgCell: View {
             } else {
                 VStack {
                     if style.showAvatar {
-                        AvatarView(id: chatViewModel.con.id.str)
-                            .aspectRatio(1, contentMode: .fit)
+                        let userInfo = chatViewModel.cache.authorInfo(from: msg)
+                        if let first = userInfo.name.first, let initial = String(first) {
+                            Image(systemName: initial.lowercased() + ".circle.fill")
+                                .font(.title2)
+                                .foregroundStyle(.tertiary)
+                        }
                     }
                 }
                 .frame(width: ChatKit.cellLeftRightViewWidth)

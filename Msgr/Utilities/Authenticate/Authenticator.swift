@@ -5,54 +5,38 @@
 //  Created by Aung Ko Min on 27/4/22.
 //
 
-import Foundation
 import SwiftUI
 import LocalAuthentication
+import FirebaseAuth
 
 class Authenticator: ObservableObject {
 
     static let shared = Authenticator()
 
-    @Published var error = ""
-    @Published var showErrorAlert = false
+
     @Published var showLoading = false
     @Published var isUnlocked = false
+    @Published var error: String?
+    private var handle: AuthStateDidChangeListenerHandle?
 
-    var isLoggedIn: Bool {
-        get { UserDefaultManager.shared.isLoggedIn }
-        set { UserDefaultManager.shared.isLoggedIn = newValue }
-    }
+    @Published var user: User?
+    var isLoggedIn: Bool { user != nil }
 
-    func signIn(with phone: String,_ password: String) async {
-        let phone = phone.removingWhitespaces()
-        guard phone.isValidPhoneNumber else {
-            DispatchQueue.main.async {
-                self.error = "Only Gmail address are allowed"
-                self.showErrorAlert = true
-            }
-            return
-        }
-        isLoggedIn = true
-        DispatchQueue.main.async {[weak self] in
-            guard let self = self else { return }
-            withAnimation {
-                self.objectWillChange.send()
+    func listen () {
+        handle = Auth.auth().addStateDidChangeListener { (auth, user) in
+            DispatchQueue.performSynchronouslyOnMainQueue {
+                self.user = user
             }
         }
     }
 
-    func register(with email: String,_ password: String) async {
-        await signIn(with: email, password)
-    }
-
-    func signOut() async {
-        isLoggedIn = false
-        DispatchQueue.main.async {[weak self] in
-            guard let self = self else { return }
-            withAnimation {
-                self.objectWillChange.send()
-            }
+    func signOut() {
+        do {
+            try Auth.auth().signOut()
+        } catch {
+            print(error)
         }
+        self.objectWillChange.send()
     }
 
     func authenticate() {
@@ -69,7 +53,6 @@ class Authenticator: ObservableObject {
                     } else {
                         if let error {
                             self.error = self.evaluatePolicyFailErrorMessageForLA(errorCode: error.code)
-                            self.showErrorAlert = true
                         } else {
                             self.isUnlocked = true
                         }
@@ -79,7 +62,6 @@ class Authenticator: ObservableObject {
         } else {
             if let error {
                 self.error = evaluatePolicyFailErrorMessageForLA(errorCode: error.code)
-                self.showErrorAlert = true
             }
         }
     }

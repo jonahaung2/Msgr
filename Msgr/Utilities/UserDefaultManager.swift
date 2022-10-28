@@ -5,8 +5,9 @@
 //  Created by Aung Ko Min on 24/8/22.
 //
 
-import Foundation
-final class UserDefaultManager {
+import SwiftUI
+
+final class UserDefaultManager: ObservableObject {
 
     static let shared = UserDefaultManager()
     private let userDefaults = UserDefaults.standard
@@ -21,8 +22,8 @@ final class UserDefaultManager {
     let UseFaceID = "Use FaceID"
     let SaveLastVisitedPage = "SaveLastVisitedPage"
 
-    var isLoggedIn: Bool {
-        get { userDefaults.bool(forKey: Is_Logged_In) }
-        set { userDefaults.set(newValue, forKey: Is_Logged_In) }
-    }
+    @AppStorage("pageSize") var isLoggedIn = false
+    @AppStorage("pushToken") var pushNotificationToken = ""
+    @AppStorage("authVerificationID") var authVerificationID: String?
+
 }

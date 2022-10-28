@@ -107,7 +107,7 @@ class MessageCachingUtils: ObservableObject {
     
     private func saveUserDisplayInfo(for message: Msg) -> UserDisplayInfo {
         guard let user = Contact.find(for: message.senderId.str) else {
-            return .init(id: message.senderId.str, name: message.senderId.str, imageURL: nil)
+            return .init(id: message.senderId.str, name: message.senderId.str, imageURL: MockData.userProfilePhotoURL)
         }
         let userDisplayInfo = UserDisplayInfo(
             id: user.id.str,

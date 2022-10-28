@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CoreData
 
 extension Msg {
     static var cached = FetchCache()
@@ -49,21 +50,7 @@ extension Msg {
         request.resultType = .countResultType
         return (try? context.count(for: request)) ?? 0
     }
-//    class func msgs(for conId: String, limit: Int, offset: Int) -> [Msg] {
-//        let context = Persistence.shared.context
-//        context.refreshAllObjects()
-//        let request = Msg.fetchRequest()
-//        request.predicate = NSPredicate(format: "conId == %@", conId)
-//        request.sortDescriptors = [NSSortDescriptor(key: "date", ascending: true)]
-//        request.fetchLimit = limit
-//        request.fetchOffset = offset
-//        do {
-//            return try context.fetch(request)
-//        }catch {
-//            print(error.localizedDescription)
-//            return []
-//        }
-//    }
+
     class func lastMsg(for conId: String) -> Msg? {
         let context = Persistence.shared.context
         let request = Msg.fetchRequest()
@@ -85,9 +72,10 @@ extension Msg {
         request.sortDescriptors = [NSSortDescriptor(key: "date", ascending: false)]
         do {
             return try context.fetch(request)
-        }catch {
-            print(error.localizedDescription)
+        } catch {
+            print(error)
             return []
         }
+
     }
 }

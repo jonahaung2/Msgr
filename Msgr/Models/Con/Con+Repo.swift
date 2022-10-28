@@ -30,9 +30,8 @@ extension Con {
 
     class func con(for id: String) -> Con? {
         let context = Persistence.shared.context
-        let request: NSFetchRequest<Con> = Con.fetchRequest()
+        let request = Con.fetchRequest(keyPath: "id", equalTo: id)
         request.fetchLimit = 1
-        request.predicate = .init(format: "id == %@", id)
         do {
             let results = try context.fetch(request)
             return results.first
@@ -48,9 +47,9 @@ extension Con {
 
     class func cons() -> [Con] {
         let context = Persistence.shared.context
-        let request: NSFetchRequest<Con> = Con.fetchRequest()
+        let request = Con.fetchRequest()
         request.predicate = .init(format: "hasMsgs == %@", NSNumber(true))
-        request.sortDescriptors = [NSSortDescriptor(key: "date", ascending: false)]
+        request.sortDescriptors = [NSSortDescriptor(key: "date", ascending: true)]
         do {
             return try context.fetch(request)
         }catch {

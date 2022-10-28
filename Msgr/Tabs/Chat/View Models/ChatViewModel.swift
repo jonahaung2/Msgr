@@ -19,6 +19,7 @@ final class ChatViewModel: ObservableObject {
    
     let datasource: ChatDatasource
     let cache = MessageCachingUtils.shared
+    private let pushNotificationSender = PushNotificationSender.shared
 
     private var cancellables = Set<AnyCancellable>()
     init(_con: Con) {
@@ -75,6 +76,11 @@ extension ChatViewModel {
             self.inputText.removeAll()
         }
     }
+    func simulatePushNoti() {
+        if let msg = datasource.msgs.first {
+            pushNotificationSender.sendPushNotification(to: UserDefaultManager.shared.pushNotificationToken, msg: msg)
+        }
+    }
     
     func simulateDemoMsg() {
         guard let contact = con.contact else { return }
@@ -83,6 +89,7 @@ extension ChatViewModel {
         DispatchQueue.performSynchronouslyOnMainQueue {
             self.datasource.insert(msg, at: 0, animated: true)
         }
+
     }
     func simulateHasRead() {
         guard let last = datasource.msgs.first, let date = last.date else { return }

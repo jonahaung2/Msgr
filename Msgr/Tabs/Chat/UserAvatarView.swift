@@ -35,7 +35,7 @@ public struct UserAvatarView: View {
                 preferredSize: size
             )
 
-            AsyncImage(url: url)
+            AsyncImage(url: adjustedURL)
                 .clipShape(Circle())
                 .frame(
                     width: size.width,

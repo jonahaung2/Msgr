@@ -24,24 +24,20 @@ struct ChatView: View {
                     Color.clear.frame(height: 1)
                         .id(1)
                     ForEach(viewModel.datasource.enuMsgs, id: \.element) { i, msg in
-                        LazyView(MsgCell(style: viewModel.msgStyle(for: msg, at: i, selectedId: viewModel.selectedId))
+                        let style = viewModel.msgStyle(for: msg, at: i, selectedId: viewModel.selectedId)
+                        LazyView(MsgCell(style: style)
                             .environmentObject(msg))
                     }
                 }
             }
             .overlay(ScrollDownButton(), alignment: .bottomTrailing)
+            
             ChatInputBar()
         }
         .accentColor(viewModel.con.themeColor.color)
         .environmentObject(viewModel)
         .task {
             tabManager.tabBarVisibility = .hidden
-        }
-        .onDisappear {
-            if !viewModel.con.hasMsgs && viewModel.con.lastMsg() != nil {
-                viewModel.con.hasMsgs = true
-            }
-
         }
         .navigationBarHidden(true)
     }

@@ -9,6 +9,7 @@ import Foundation
 import UserNotifications
 
 public class PushNotiInfo {
+
     public let cid: String?
     public let messageId: String?
     public let eventType: EventType?

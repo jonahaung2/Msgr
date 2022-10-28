@@ -6,23 +6,45 @@
 //
 
 import SwiftUI
+import FirebaseCore
+import FirebaseAuth
 
 class AppDelegateAdaptor: NSObject, UIApplicationDelegate {
-    
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
-            withAnimation {
-                if AppState.shared.userState == .launchAnimation {
-                    AppState.shared.userState = .loggedIn
-                }
-            }
-        }
+    let pushNotificationManager = PushNotificationManager.shared
+    let authenticator = Authenticator.shared
+    let persistance = Persistence.shared
 
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication .LaunchOptionsKey: Any]?) -> Bool {
+        FirebaseApp.configure()
+        pushNotificationManager.registerForPushNotifications()
+        authenticator.listen()
+        
         return true
     }
 
     func applicationWillTerminate(_ application: UIApplication) {
-        Persistence.shared.save()
+        persistance.save()
+    }
+    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        Auth.auth().setAPNSToken(deviceToken, type: .sandbox)
+    }
+
+    func application(_ application: UIApplication,
+        didReceiveRemoteNotification notification: [AnyHashable : Any],
+        fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+      if Auth.auth().canHandleNotification(notification) {
+        completionHandler(.noData)
+        return
+      }
+        completionHandler(.newData)
+    }
+
+    func application(_ application: UIApplication, open url: URL,
+                     options: [UIApplication.OpenURLOptionsKey : Any]) -> Bool {
+      if Auth.auth().canHandle(url) {
+        return true
+      }
+        return true
     }
 }

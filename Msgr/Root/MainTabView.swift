@@ -29,7 +29,6 @@ struct MainTabView: View {
                         Label(tab.name, systemImage: tab.icon.systemName)
                     }
                     .tag(tab)
-
             }
 
         }
