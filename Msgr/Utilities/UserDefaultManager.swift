@@ -23,7 +23,7 @@ final class UserDefaultManager: ObservableObject {
     let SaveLastVisitedPage = "SaveLastVisitedPage"
 
     @AppStorage("pageSize") var isLoggedIn = false
-    @AppStorage("pushToken") var pushNotificationToken = ""
+    @AppStorage("pushToken") var pushNotificationToken: String?
     @AppStorage("authVerificationID") var authVerificationID: String?
 
 }

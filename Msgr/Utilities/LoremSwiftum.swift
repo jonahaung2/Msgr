@@ -82,7 +82,9 @@ public final class Lorem {
     public static func sentences(_ range: ClosedRange<Int>) -> String {
         return _compose(sentence, count: Int.random(in: range), joinBy: .space)
     }
-    
+    public static var random: String {
+        [sentence, fullName, emailAddress, url, shortTweet, tweet, word].random() ?? tweet
+    }
     /// Generates a single paragraph.
     public static var paragraph: String {
         let numberOfSentences = Int.random(

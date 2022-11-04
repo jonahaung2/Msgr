@@ -1,7 +1,9 @@
 //
-// Copyright © 2022 Stream.io Inc. All rights reserved.
+//  LazyView.swift
+//  Msgr
 //
-
+//  Created by Aung Ko Min on 12/10/22.
+//
 import SwiftUI
 
 public struct LazyView<Content: View>: View {

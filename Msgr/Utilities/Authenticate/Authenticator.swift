@@ -13,30 +13,24 @@ class Authenticator: ObservableObject {
 
     static let shared = Authenticator()
 
-
     @Published var showLoading = false
     @Published var isUnlocked = false
     @Published var error: String?
-    private var handle: AuthStateDidChangeListenerHandle?
 
-    @Published var user: User?
-    var isLoggedIn: Bool { user != nil }
+    @Published var isLoggedIn: Bool = false
 
-    func listen () {
-        handle = Auth.auth().addStateDidChangeListener { (auth, user) in
-            DispatchQueue.performSynchronouslyOnMainQueue {
-                self.user = user
-            }
-        }
+    func observe() {
+        isLoggedIn = Auth.auth().currentUser != nil
     }
 
     func signOut() {
         do {
             try Auth.auth().signOut()
+            isLoggedIn = false
         } catch {
             print(error)
         }
-        self.objectWillChange.send()
+        objectWillChange.send()
     }
 
     func authenticate() {
@@ -103,10 +97,4 @@ class Authenticator: ObservableObject {
         }
     }
 
-}
-
-private extension String {
-    var isValidPhoneNumber: Bool {
-        self.allSatisfy{ $0.isNumber }
-    }
 }

@@ -25,6 +25,12 @@ struct ScrollViewOffsetPreferenceKey: PreferenceKey {
         value = value ?? nextValue()
     }
 }
+struct FramePreferenceKey: PreferenceKey {
+    static var defaultValue: CGRect? = nil
+    static func reduce(value: inout CGRect?, nextValue: () -> CGRect?) {
+        value = nextValue() ?? value
+    }
+}
 
 struct WidthPreferenceKey: PreferenceKey {
     static var defaultValue: CGFloat? = nil

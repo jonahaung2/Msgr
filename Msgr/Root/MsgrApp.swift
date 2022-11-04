@@ -11,25 +11,27 @@ import SwiftUI
 struct MsgrApp: App {
 
     @UIApplicationDelegateAdaptor(AppDelegateAdaptor.self) private var appDelegate
-    @StateObject var appState = AppState.shared
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
         WindowGroup {
             MainTabView()
+                .environment(\.managedObjectContext, appDelegate.persistance.viewContext)
                 .environmentObject(appDelegate.authenticator)
-                .environment(\.managedObjectContext, appDelegate.persistance.context)
-
+                .environmentObject(appDelegate.server)
+                .environmentObject(appDelegate.pushNotificationManager)
+                .onChange(of: scenePhase) { phase in
+                    switch phase {
+                    case .active:
+                        print("active")
+                    case .inactive:
+                        print("inactive")
+                    case .background:
+                        print("background")
+                    @unknown default:
+                        fatalError()
+                    }
+                }
         }
     }
-}
-
-class AppState: ObservableObject {
-    static let shared = AppState()
-    @Published var userState: UserState = .launchAnimation
-    private init() {}
-}
-
-enum UserState {
-    case launchAnimation
-    case loggedIn
 }

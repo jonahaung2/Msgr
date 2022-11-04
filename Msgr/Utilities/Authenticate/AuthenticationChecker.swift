@@ -14,7 +14,7 @@ private struct AuthenticationCheckerModifier: ViewModifier {
    
    func body(content: Content) -> some View {
       Group {
-         if authenticator.isLoggedIn {
+          if authenticator.isLoggedIn {
             content
                  .redacted(reason: authenticator.isUnlocked ? [] : .placeholder)
                  .task {

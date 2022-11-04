@@ -9,8 +9,9 @@ import Foundation
 import CoreData
 
 extension MediaQueue {
+
     class func fetchAll() -> [MediaQueue]? {
-        let context = Persistence.shared.context
+        let context = PersistentContainer.shared.viewContext
         let request = NSFetchRequest<MediaQueue>.init(entityName: MediaQueue.entity().name!)
         do {
             let results = try context.fetch(request)
@@ -22,7 +23,7 @@ extension MediaQueue {
     }
     
     class func deleteAll() {
-        let context = Persistence.shared.context
+        let context = PersistentContainer.shared.viewContext
         let deleteRequest = NSBatchDeleteRequest(fetchRequest: MediaQueue.fetchRequest())
         deleteRequest.resultType = .resultTypeObjectIDs
 
@@ -47,7 +48,7 @@ extension MediaQueue {
     }
     
     class func fetch(id: String) -> MediaQueue? {
-        let context = Persistence.shared.context
+        let context = PersistentContainer.shared.viewContext
         let request = NSFetchRequest<MediaQueue>.init(entityName: MediaQueue.entity().name!)
         request.fetchLimit = 1
         request.predicate = .init(format: "id == %@", id)
@@ -61,7 +62,7 @@ extension MediaQueue {
     }
     
     class func fetchOne() -> MediaQueue? {
-        let context = Persistence.shared.context
+        let context = PersistentContainer.shared.viewContext
         let request = NSFetchRequest<MediaQueue>.init(entityName: MediaQueue.entity().name!)
         request.predicate = NSPredicate(format: "isQueued == %@", NSNumber(value: true))
         request.fetchLimit = 1
@@ -75,10 +76,10 @@ extension MediaQueue {
     }
     
     class func create(id: String) -> MediaQueue {
-        let context = Persistence.shared.context
+        let context = PersistentContainer.shared.viewContext
         let mediaQueue = MediaQueue(context: context)
         mediaQueue.id = id
-        Persistence.shared.save()
+        PersistentContainer.shared.save()
         return mediaQueue
     }
     
@@ -87,7 +88,6 @@ extension MediaQueue {
     }
     
     class func restart(_ id: String) {
-        
         if let mediaQueue = MediaQueue.fetch(id: id) {
             mediaQueue.update(isFailed: false)
         }
@@ -108,13 +108,12 @@ extension MediaQueue {
     }
     
     func update(isFailed value: Bool) {
-        
         if (isFailed != value) {
             isFailed = value
             update()
         }
     }
     private func update() {
-        Persistence.shared.save()
+        PersistentContainer.shared.save()
     }
 }

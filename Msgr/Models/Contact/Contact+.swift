@@ -9,6 +9,10 @@ import Foundation
 
 extension Contact {
     var isCurrentUser: Bool {
-        id == CurrentUser.shared.user.id
+        id == CurrentUser.id
+    }
+
+    var isMsgUser: Bool {
+        id != phoneNumber
     }
 }

@@ -1,7 +1,9 @@
 //
-// Copyright © 2022 Stream.io Inc. All rights reserved.
+//  MainQueue+Synchronous.swift
+//  Msgr
 //
-
+//  Created by Aung Ko Min on 12/10/22.
+//
 import Foundation
 
 extension DispatchQueue {

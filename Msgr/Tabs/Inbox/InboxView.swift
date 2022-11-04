@@ -21,7 +21,7 @@ struct InboxView: View {
         List {
             ForEach(items) {
                 InBoxCell()
-                    .environmentObject($0)
+                    .environmentObject(ConViewModel(con: $0))
             }
             .onDelete(perform: deleteItems)
         }

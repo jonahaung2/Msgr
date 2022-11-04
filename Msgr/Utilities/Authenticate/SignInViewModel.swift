@@ -7,7 +7,9 @@
 
 import Foundation
 import FirebaseAuth
-
+import CountryPhoneCodeTextField
+import FirebaseFirestore
+import FirebaseFirestoreSwift
 
 final class SignInViewModel: ObservableObject {
 
@@ -32,52 +34,83 @@ final class SignInViewModel: ObservableObject {
             }
         }
     }
-    
-
-    @Published var phoneNumber = ""
+    @Published var phone = PhoneNumber.locale
     @Published var otp = ""
     @Published var infoText = ""
     @Published var signInFlow = SignInFlow.PhoneNumber
-    @Published var isLoading = false
     @Published var errorText: String?
+    @Published var isLoading = false
 
     func verifyPhoneNumber() {
-        guard !phoneNumber.isEmpty else { return }
         isLoading = true
-        let formatted = PhoneHelper.getCountryCode() + phoneNumber.trimmingCharacters(in: .whitespaces)
+        let formatted = phone.formattedNumber
         PhoneAuthProvider.provider()
-          .verifyPhoneNumber(formatted, uiDelegate: nil) { verificationID, error in
+          .verifyPhoneNumber(formatted, uiDelegate: nil) {[weak self] verificationID, error in
+              guard let self = self else { return }
+              self.isLoading = false
               if let error {
-                  self.isLoading = false
                   self.errorText = error.localizedDescription
-                return
-              }
-              if let verificationID {
-                  self.infoText = verificationID
+              } else if let verificationID {
                   UserDefaultManager.shared.authVerificationID = verificationID
                   self.signInFlow = .OTP
               }
-              self.isLoading = false
           }
     }
 
     func verifyOTP() {
         guard let verificationID = UserDefaultManager.shared.authVerificationID else { return }
         guard otp.isWhitespace == false else { return }
-        isLoading = true
-
         let credential = PhoneAuthProvider.provider().credential(withVerificationID: verificationID, verificationCode: otp)
-        infoText = credential.description
-
-        Auth.auth().signIn(with: credential) { result, error in
+        isLoading = true
+        Auth.auth().signIn(with: credential) {[weak self] result, error in
+            guard let self = self else { return }
+            self.isLoading = false
             if let error {
-                self.isLoading = false
                 self.errorText = error.localizedDescription
-                return
+            } else if let result {
+                print(result)
+                let user = result.user
+                self.updateUserToFirestore(user: user)
+//                Authenticator.shared.isLoggedIn = true
             }
-            if result?.user != nil {
-                DispatchQueue.main.async {
-                    self.isLoading = false
+        }
+    }
+
+    private func updateUserToFirestore(user: User) {
+        let contact = Contact_(user.uid, "Aung Ko Min", user.phoneNumber.str, "http://www.goodmorningimagesdownload.com/wp-content/uploads/2020/11/Facebook-Profile-Images-65.jpg", pushToken: UserDefaultManager.shared.pushNotificationToken)
+        
+        if let dic = contact.dictionary {
+            Firestore.firestore().collection("users").document(contact.id).setData(dic, merge: true) { error in
+                if let error {
+                    self.errorText = error.localizedDescription
+                } else {
+                    Authenticator.shared.isLoggedIn = true
+                }
+            }
+        }
+    }
+    func emailLogin() {
+        let email = "jonahaung@gmail.com"
+        let password = "111111"
+        isLoading = true
+        
+        Auth.auth().signIn(withEmail: email, password: password) { result, error  in
+            self.isLoading = false
+            if let error {
+                self.errorText = error.localizedDescription
+            } else if let result {
+                let user = result.user
+                let contact = Contact_(user.uid, "Jonah Aung", "+6598765432", "http://www.goodmorningimagesdownload.com/wp-content/uploads/2020/11/Facebook-Profile-Images-65.jpg", pushToken: UserDefaultManager.shared.pushNotificationToken)
+
+                if let dic = contact.dictionary {
+                    print(dic)
+                    Firestore.firestore().collection("users").document(contact.id).setData(dic, merge: true) { error in
+                        if let error {
+                            self.errorText = error.localizedDescription
+                        } else {
+                            Authenticator.shared.isLoggedIn = true
+                        }
+                    }
                 }
             }
         }

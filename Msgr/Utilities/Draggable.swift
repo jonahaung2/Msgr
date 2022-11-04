@@ -11,7 +11,6 @@ struct DraggableModifier : ViewModifier {
 
     enum Direction {
         case left, right, top, bottom
-
         var isVertical: Bool { self == .top || self == .bottom }
         var isHorizontal: Bool { self == .left || self == .right }
 
@@ -24,33 +23,30 @@ struct DraggableModifier : ViewModifier {
     }
 
     let direction: Direction
-
     @State private var draggedOffset: CGSize = .zero
-    @State private var isDragging = false
 
 
     func body(content: Content) -> some View {
-        let dragGesture = DragGesture()
+        let dragGesture = DragGesture(minimumDistance: 5, coordinateSpace: .local)
             .onChanged { value in
-                self.draggedOffset = direction.offset(for: value.translation)
+                let offset = direction.offset(for: value.translation)
+                let distance = abs(offset.width)
+                if distance < 200 {
+                    self.draggedOffset = offset
+                    if Int(distance) == 199 {
+                        HapticsEngine.shared.playSuccess()
+                    }
+                }
             }
-            .onEnded { _ in
-                draggedOffset = .zero
-                isDragging = false
-                HapticsEngine.shared.playTick()
+            .onEnded { value in
+                if draggedOffset.width != 0 {
+                    draggedOffset.width = 0
+                    HapticsEngine.shared.playSuccess()
+                }
+
             }
-
-        let pressGesture = LongPressGesture(minimumDuration: 0.1)
-            .onEnded { ended in
-                HapticsEngine.shared.playTick()
-                draggedOffset = .zero
-                isDragging = true
-            }
-
-        let combined = pressGesture.sequenced(before: dragGesture)
-
         content
             .offset(draggedOffset)
-            .gesture(combined)
+            .gesture(dragGesture)
     }
 }

@@ -10,8 +10,8 @@ import SwiftUI
 extension Con {
 
     enum ConType {
-        case single(Contact?)
-        case group([Contact])
+        case single(Contact_?)
+        case group([Contact_])
     }
     var themeColor: ThemeColor {
         get { ThemeColor(rawValue: themeColor_) ?? .Blue }
@@ -27,15 +27,21 @@ extension Con {
         set { bgImage_ = newValue.rawValue }
     }
 
-    var members: [Contact] {
+    var contact_: Contact_? {
+        members.filter{ $0.id != CurrentUser.id }.first
+    }
+    
+    var members: [Contact_] {
         get {
             guard let members_ else {
                 return []
             }
-            var values = [Contact]()
+            var values = [Contact_]()
             members_.forEach { mem in
-                if let contact = Contact.find(for: mem) {
-                    values.append(contact)
+                if let x = MessageCachingUtils.shared.userDisplayInfo(with: mem) {
+                    values.append(x)
+                }else if let contact = Contact.find(for: mem) {
+                    values.append(.init(contact))
                 }
             }
             return values
@@ -44,16 +50,9 @@ extension Con {
             members_ = newValue.compactMap{ $0.id }
         }
     }
-    var contact: Contact? {
-        switch conType {
-        case .single(let contact):
-            return contact
-        case .group:
-            return nil
-        }
-    }
+
     var conType: ConType {
-        let filtered = members.filter{ !$0.isCurrentUser }
+        let filtered = members.filter{ $0.phone != CurrentUser.phone  }
         return filtered.count == 1 ? .single(filtered.first) : .group(filtered)
     }
 }

@@ -48,7 +48,6 @@ struct SearchableListView<Content>: View where Content: View {
         .searchable(text: $viewModel.searchText)
         .navigationBarItems(trailing: trailingItem)
     }
-
     private var trailingItem: some View {
         Toggle(isOn: $showGroup) {
             XIcon(.distribute_vertical_top)

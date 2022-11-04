@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="21279" systemVersion="22A380" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="21512" systemVersion="22A380" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
     <entity name="Con" representedClassName="Con" syncable="YES" codeGenerationType="class">
         <attribute name="bgImage_" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="bubbleCornorRadius" attributeType="Integer 16" defaultValueString="19" usesScalarValueType="YES"/>
@@ -18,6 +18,7 @@
         <attribute name="name" attributeType="String"/>
         <attribute name="phoneNumber" attributeType="String"/>
         <attribute name="photoUrl" optional="YES" attributeType="String"/>
+        <attribute name="pushToken" optional="YES" attributeType="String"/>
     </entity>
     <entity name="MediaQueue" representedClassName="MediaQueue" syncable="YES" codeGenerationType="class">
         <attribute name="id" attributeType="String"/>

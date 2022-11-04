@@ -9,11 +9,11 @@ import SwiftUI
 
 struct InBoxCell: View {
 
-    @EnvironmentObject private var con: Con
+    @EnvironmentObject private var conViewModel: ConViewModel
 
     var body: some View {
         HStack {
-            AvatarView(id: con.id.str)
+            AvatarView(id: conViewModel.id)
                 .frame(width: 50, height: 50)
 
 //            if let msg = con.lastMsg() {
@@ -31,18 +31,18 @@ struct InBoxCell: View {
 //            }
 //            .frame(width: 50, height: 50)
 //
-            if let msg = con.lastMsg() {
+            if let msg = conViewModel.lasMsg {
                 VStack(alignment: .leading, spacing: 2) {
                     HStack {
-                        Text(con.name.str)
+                        Text(conViewModel.name)
                             .font(.headline)
                         +
-                        Text(" \(Msg.count(for: con.id.str)) ")
+                        Text(" \(Msg.count(for: conViewModel.id)) ")
                             .italic()
                             .font(.caption2)
 
-                        Text(msg.date?.toStringWithRelativeTime() ?? "" + " ")
-                            .font(.footnote)
+//                        Text(msg.date?.toStringWithRelativeTime() ?? "" + " ")
+//                            .font(.footnote)
                     }
 
                     Group {
@@ -58,7 +58,7 @@ struct InBoxCell: View {
                 }
             }
         }
-        .tapToPush(ChatView(_con: con))
+        .tapToPush(ChatView(_con: conViewModel.con))
     }
 
     private func foregroundStyle(for msg: Msg) -> some ShapeStyle {

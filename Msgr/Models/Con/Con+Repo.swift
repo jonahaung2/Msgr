@@ -8,28 +8,25 @@
 import Foundation
 import CoreData
 extension Con {
+    
     class func fetchOrCreate(contact: Contact) -> Con {
         let conId = contact.conId
         if let cCon = con(for: conId) {
             return cCon
         }
-        let con = create(id: conId)
+        let context = PersistentContainer.shared.viewContext
+        let con = Con(context: context)
+        con.id = conId
         con.name = contact.name
-        con.members = [CurrentUser.shared.user, contact]
+        con.members_ = [CurrentUser.id, contact.id.str]
         con.photoUrl = Media.path(userId: contact.id.str)
+        con.date = Date()
         return con
     }
-    @discardableResult
-    class func create(id: String) -> Con {
-        let context = Persistence.shared.context
-        let cCon = Con(context: context)
-        cCon.id = id
-        cCon.date = Date()
-        return cCon
-    }
+
 
     class func con(for id: String) -> Con? {
-        let context = Persistence.shared.context
+        let context = PersistentContainer.shared.viewContext
         let request = Con.fetchRequest(keyPath: "id", equalTo: id)
         request.fetchLimit = 1
         do {
@@ -42,11 +39,11 @@ extension Con {
     }
 
     class func delete(cCon: Con) {
-        Persistence.shared.context.delete(cCon)
+        PersistentContainer.shared.viewContext.delete(cCon)
     }
 
     class func cons() -> [Con] {
-        let context = Persistence.shared.context
+        let context = PersistentContainer.shared.viewContext
         let request = Con.fetchRequest()
         request.predicate = .init(format: "hasMsgs == %@", NSNumber(true))
         request.sortDescriptors = [NSSortDescriptor(key: "date", ascending: true)]

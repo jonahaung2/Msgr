@@ -12,7 +12,6 @@ struct MainTabView: View {
     @AppStorage(UserDefaultManager.shared.Tint_Color) private var tintColor = TintColor.brown
     @AppStorage(UserDefaultManager.shared.Is_Dark_Mode) private var isDarkMode = false
     @AppStorage(UserDefaultManager.shared.List_Style) private var listStyle = XListStyle.Default
-    @AppStorage(UserDefaultManager.shared.SaveLastVisitedPage) private var saveLastVisitedPage = true
     @StateObject private var tabManager = MainTabViewManager()
 
     var body: some View {
@@ -30,18 +29,12 @@ struct MainTabView: View {
                     }
                     .tag(tab)
             }
-
         }
         .authenticatable()
         .environmentObject(tabManager)
         .accentColor(tintColor.color)
         .colorScheme(isDarkMode ? .dark : .light)
         .xListStyle(type: listStyle)
-        .task {
-            if !saveLastVisitedPage {
-                tabManager.current = .Inbox
-            }
-        }
     }
 }
 

@@ -13,7 +13,7 @@ extension Msg {
         set { msgType_ = newValue.rawValue }
     }
     var recieptType: RecieptType {
-        senderId == CurrentUser.shared.user.id ? .Send : .Receive
+        senderId == CurrentUser.id ? .Send : .Receive
     }
     var deliveryStatus: DeliveryStatus {
         get { .init(rawValue: deliveryStatus_) ?? .Sent }

@@ -15,7 +15,6 @@ class ImageService {
     private let urlSession = URLSession.shared
     
     func fetchImage(_ url: URL, _ size: ImageSize) -> AnyPublisher<UIImage?, Never> {
-        
         return urlSession.dataTaskPublisher(for: url)
             .tryMap { [weak self] (data, response) -> UIImage? in
                 guard let image = UIImage(data: data) else {
@@ -29,7 +28,6 @@ class ImageService {
     }
     
     private func resize(_ image: UIImage, to width: CGFloat) -> UIImage {
-        
         let oldWidth = image.size.width
         let scaleFactor = width / oldWidth
         
@@ -47,6 +45,7 @@ class ImageService {
 
 
 extension UIImage {
+
     var thumbnail: UIImage? {
         get async {
             let size = CGSize(width: 30, height: 30)

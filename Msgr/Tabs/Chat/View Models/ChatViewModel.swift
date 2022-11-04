@@ -16,81 +16,120 @@ final class ChatViewModel: ObservableObject {
     @Published var selectedId: String?
     @Published var showScrollToLatestButton = false
     @Published var isTyping = false
-   
+
     let datasource: ChatDatasource
     let cache = MessageCachingUtils.shared
-    private let pushNotificationSender = PushNotificationSender.shared
 
     private var cancellables = Set<AnyCancellable>()
+
     init(_con: Con) {
         con = _con
         datasource = .init(conId: _con.id.str)
         datasource
             .$allMsgs
             .removeDuplicates()
+            .receive(on: RunLoop.main)
             .sink {[weak self] value in
                 guard let self = self else { return }
-                self.objectWillChange.send()
-            }
-            .store(in: &cancellables)
-        
-        cache
-            .$scrollOffset
-            .removeDuplicates()
-            .debounce(for: 0.2, scheduler: RunLoop.main)
-            .sink {[weak self] value in
-                guard let self = self else { return }
-                let scrollButtonShown = value < -20
-                if scrollButtonShown != self.showScrollToLatestButton {
-                    withAnimation {
-                        self.showScrollToLatestButton = scrollButtonShown
-
-                    }
+                withAnimation {
+                    self.objectWillChange.send()
                 }
-
             }
             .store(in: &cancellables)
+        NotificationCenter.default
+            .publisher(for: .MsgNoti)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] value in
+                guard let self = self else { return }
+                self.didReceiveNoti(value)
+            }
+            .store(in: &cancellables)
+//        cache
+//            .$currentScrolledFrame
+//            .debounce(for: 0.2, scheduler: RunLoop.main)
+//            .removeDuplicates()
+//            .sink { [weak self] value in
+//                guard let self = self else { return }
+//                self.didUpdateVisibleRect(value)
+//            }
+//            .store(in: &cancellables)
+
+    }
+}
+
+// Receive Updates
+extension ChatViewModel {
+    private func didReceiveNoti(_ outputt: NotificationCenter.Publisher.Output) {
+        guard let noti = outputt.msgNoti else { return }
+        switch noti.type {
+        case .New(let msg):
+            datasource.insert(msg, at: 0, animated: true)
+            Audio.playMessageIncoming()
+        case .Typing(_):
+            break
+        case .Update(let id):
+            print(id)
+        }
     }
 }
 
 // Scrolling
 extension ChatViewModel {
+
     func scrollToBottom(_ animated: Bool) {
         scrollItem = ScrollItem(id: 1, anchor: .top, animate: animated)
+    }
+
+    func didUpdateVisibleRect(_ visibleRect: CGRect) {
+        let scrollButtonShown = visibleRect.minY < 0
+        if scrollButtonShown != showScrollToLatestButton {
+            withAnimation {
+                showScrollToLatestButton = scrollButtonShown
+            }
+        }
+        let nearTop = visibleRect.maxY < UIScreen.main.bounds.height
+        if nearTop {
+            if self.datasource.loadMoreIfNeeded() {
+                self.objectWillChange.send()
+            }
+        }
     }
 }
 
 //
 extension ChatViewModel {
+    
     func sendMessage() {
         if inputText.isWhitespace {
             withAnimation(.interactiveSpring()) {
-                inputText = Lorem.sentence
+                inputText = Lorem.random
             }
             return
         }
-        
-        let msg = Msg.create(text: inputText, conId: con.id.str, senderId: CurrentUser.shared.user.id.str)
-        DispatchQueue.performSynchronouslyOnMainQueue {
-            datasource.insert(msg, at: 0, animated: true)
-            self.inputText.removeAll()
-        }
+        let msg = Msg.create(text: inputText, conId: con.id.str, senderId: CurrentUser.id)
+        datasource.insert(msg, at: 0, animated: false)
+        inputText.removeAll()
+        MsgSender.shard.send(msg_: Msg_(msg: msg))
     }
+
     func simulatePushNoti() {
-        if let msg = datasource.msgs.first {
-            pushNotificationSender.sendPushNotification(to: UserDefaultManager.shared.pushNotificationToken, msg: msg)
+        guard let contact_ = con.contact_ else { return }
+        let msg_ = Msg_(id: UUID().uuidString, text: Lorem.random, date: Date(), conId: con.id.str, senderId: contact_.id, msgType: Msg.MsgType.Text.rawValue)
+        if let token = UserDefaultManager.shared.pushNotificationToken {
+            print(token)
+            MsgSender.shard.sendIncoming(msg_: msg_, token: token)
         }
     }
     
     func simulateDemoMsg() {
-        guard let contact = con.contact else { return }
-        let msg = Msg.create(text: Lorem.sentence, conId: con.id.str, senderId: contact.id.str)
+        guard let contact_ = con.contact_ else { return }
+        let msg = Msg.create(text: Lorem.random, conId: con.id.str, senderId: contact_.id)
         msg.deliveryStatus = .Received
         DispatchQueue.performSynchronouslyOnMainQueue {
             self.datasource.insert(msg, at: 0, animated: true)
         }
-
     }
+
     func simulateHasRead() {
         guard let last = datasource.msgs.first, let date = last.date else { return }
         datasource.msgs.filter{ $0.deliveryStatus.rawValue < Msg.DeliveryStatus.Sent.rawValue && $0.date ?? Date() <= date }.forEach { msg in
@@ -208,7 +247,6 @@ extension ChatViewModel {
 
         let bubbleShape = BubbleShape(corners: rectCornors, cornorRadius: con.bubbleCornorRadius.cgFloat)
         let textColor = this.recieptType == .Send ? ChatKit.textTextColorOutgoing : nil
-        
         return MsgStyle(bubbleShape: bubbleShape, showAvatar: showAvatar, showTimeSeparater: showTimeSeparater, showTopPadding: showTopPadding, isSelected: thisIsSelectedId, bubbleColor: con.bubbleColor(for: this), textColor: textColor)
     }
 }

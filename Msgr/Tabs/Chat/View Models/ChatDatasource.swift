@@ -9,12 +9,14 @@ import SwiftUI
 
 final class ChatDatasource: ObservableObject {
 
+    private let pageSize = 50
+    private var currentPage = 1
+
     @Published var allMsgs = [Msg]()
+
     var msgs: ArraySlice<Msg> {
         allMsgs.prefix(pageSize*currentPage)
     }
-    private let pageSize = 50
-    private var currentPage = 1
 
     var enuMsgs: Array<(offset: Int, element: Msg)> {
         Array(msgs.enumerated())
@@ -23,7 +25,6 @@ final class ChatDatasource: ObservableObject {
     init(conId: String) {
         allMsgs = Msg.msgs(for: conId)
     }
-
     
     func insert(_ msg: Msg, at i: Int, animated: Bool) {
         DispatchQueue.main.async {

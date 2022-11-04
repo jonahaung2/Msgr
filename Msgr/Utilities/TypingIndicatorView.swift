@@ -1,7 +1,9 @@
 //
-// Copyright © 2022 Stream.io Inc. All rights reserved.
+//  TypingIndicatorView.swift
+//  Msgr
 //
-
+//  Created by Aung Ko Min on 12/10/22.
+//
 import SwiftUI
 
 /// View shown when other users are typing.
@@ -44,7 +46,7 @@ public struct TypingIndicatorView: View {
 
 /// View that represents one circle of the typing indicator view.
 private struct TypingIndicatorCircle: View {
-    
+
     private let circleWidth: CGFloat = 7
     private let circleHeight: CGFloat = 7
     private let yOffset: CGFloat = 10
@@ -58,5 +60,6 @@ private struct TypingIndicatorCircle: View {
             .frame(width: circleWidth, height: circleHeight)
             .opacity(isTyping ? maxOpacity : minOpacity)
             .offset(y: isTyping ? yOffset : -yOffset)
+            .foregroundColor(.accentColor)
     }
 }
