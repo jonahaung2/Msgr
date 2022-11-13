@@ -11,7 +11,7 @@ import CoreData
 extension MediaQueue {
 
     class func fetchAll() -> [MediaQueue]? {
-        let context = PersistentContainer.shared.viewContext
+        let context = CoreDataStack.shared.viewContext
         let request = NSFetchRequest<MediaQueue>.init(entityName: MediaQueue.entity().name!)
         do {
             let results = try context.fetch(request)
@@ -23,7 +23,7 @@ extension MediaQueue {
     }
     
     class func deleteAll() {
-        let context = PersistentContainer.shared.viewContext
+        let context = CoreDataStack.shared.viewContext
         let deleteRequest = NSBatchDeleteRequest(fetchRequest: MediaQueue.fetchRequest())
         deleteRequest.resultType = .resultTypeObjectIDs
 
@@ -48,7 +48,7 @@ extension MediaQueue {
     }
     
     class func fetch(id: String) -> MediaQueue? {
-        let context = PersistentContainer.shared.viewContext
+        let context = CoreDataStack.shared.viewContext
         let request = NSFetchRequest<MediaQueue>.init(entityName: MediaQueue.entity().name!)
         request.fetchLimit = 1
         request.predicate = .init(format: "id == %@", id)
@@ -62,7 +62,7 @@ extension MediaQueue {
     }
     
     class func fetchOne() -> MediaQueue? {
-        let context = PersistentContainer.shared.viewContext
+        let context = CoreDataStack.shared.viewContext
         let request = NSFetchRequest<MediaQueue>.init(entityName: MediaQueue.entity().name!)
         request.predicate = NSPredicate(format: "isQueued == %@", NSNumber(value: true))
         request.fetchLimit = 1
@@ -76,10 +76,10 @@ extension MediaQueue {
     }
     
     class func create(id: String) -> MediaQueue {
-        let context = PersistentContainer.shared.viewContext
+        let context = CoreDataStack.shared.viewContext
         let mediaQueue = MediaQueue(context: context)
         mediaQueue.id = id
-        PersistentContainer.shared.save()
+        
         return mediaQueue
     }
     
@@ -114,6 +114,6 @@ extension MediaQueue {
         }
     }
     private func update() {
-        PersistentContainer.shared.save()
+        
     }
 }

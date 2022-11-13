@@ -6,52 +6,57 @@
 //
 
 import SwiftUI
-import CoreData
 
 struct ContactsView: View {
     
     @StateObject private var manager = ContactManager()
 
-    @Environment(\.managedObjectContext) private var viewContext
-    @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Contact.name, ascending: true)],
-        animation: .default)
-    private var items: FetchedResults<Contact>
-
-    private var displayContacts: [Contact] {
-        if searchText.isEmpty {
-            return Array(items)
-        }else {
-            return items.filter{ $0.name.str.lowercased().contains(searchText.lowercased()) }
-        }
-    }
-
-    @State private var searchText = ""
-
-
     var body: some View {
         List {
-            ForEach(displayContacts) { contact in
-                ContactCell(contact: contact)
+            if manager.searchText.isWhitespace {
+                Section {
+                    Label("Create Contact", systemImage: XIcon.Icon.person_crop_circle.systemName)
+                    Label("Create Group", systemImage: XIcon.Icon.plus_circle_fill.systemName)
+                        .tapToPresent(CreateGroupContactPickerView())
+                }
             }
-            .onDelete(perform: removeContact(at:))
+            if !manager.displayGroups.isEmpty {
+                Section {
+                    ForEach(manager.displayGroups) { group in
+                        Text(group.name.str)
+                            .badge((group.members_?.count.description ?? "0") + " members")
+                            .tapToPush(ChatView(_con: group))
+                    }
+                }
+            }
+            Section {
+                ForEach(manager.displayContacts) { contact in
+                    ContactCell(contact: contact)
+                }
+                .onDelete(perform: removeContact(at:))
+            }
         }
         .navigationTitle("Contacts")
         .navigationBarItems(trailing: trailingItem)
-        .searchable(text: $searchText)
+        .searchable(text: $manager.searchText)
     }
 
     private func removeContact(at offsets: IndexSet) {
         for index in offsets {
-            let item = items[index]
-            PersistentContainer.shared.viewContext.delete(item)
+            let item = manager.displayContacts[index]
+            CoreDataStack.shared.viewContext.delete(item)
+            CoreDataStack.shared.save()
+            manager.refresh()
         }
-        PersistentContainer.shared.save()
     }
 
     private var trailingItem: some View {
         HStack {
+            Button("Delete All") {
+                manager.deleteAll()
+            }
             Button("Sync Contacts") {
-                manager.loadContacts()
+                manager.sync()
             }
             EditButton()
         }

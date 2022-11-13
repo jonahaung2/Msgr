@@ -8,63 +8,57 @@
 import SwiftUI
 
 struct ChatTopBar: View {
-
+    
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var viewModel: ChatViewModel
 
     var body: some View {
-        VStack(spacing: 0) {
+        VStack {
             HStack(alignment: .top) {
                 Button {
-                    if !viewModel.con.hasMsgs && viewModel.con.lastMsg() != nil {
-                        viewModel.con.hasMsgs = true
-                    }
-                    viewModel.con.objectWillChange.send()
                     dismiss()
                 } label: {
                     Image(systemName: "chevron.left")
+                        .bold()
                         .imageScale(.large)
                         .padding(.horizontal)
-                        .padding(.bottom)
+                        .padding(.bottom, 5)
                 }
 
                 Spacer()
 
                 VStack(spacing: 0) {
-                    Text(viewModel.con.name.str)
-                        .bold()
+                    Text(viewModel.con.nameX)
+                        .font(.subheadline)
                         .foregroundColor(.primary)
                         .tapToPush(ConInfoView().environmentObject(viewModel))
-
-                    Text("Online")
-                        .font(.caption)
-                        .lineLimit(1)
                 }
 
                 Spacer()
+
                 Button {
-                    viewModel.simulatePushNoti()
+
                 } label: {
                     Image(systemName: "phone.fill")
                         .imageScale(.large)
-
+                        .padding(.bottom, 5)
                 }
                 Button {
                     viewModel.isTyping.toggle()
                 } label: {
                     Image(systemName: "video.fill")
                         .imageScale(.large)
-
+                        .padding(.bottom, 5)
                 }
                 Button {
                     viewModel.simulateDemoMsg()
                 } label: {
                     Image(systemName: "tuningfork")
                         .imageScale(.large)
-                        .padding(.horizontal)
+                        .padding(.trailing)
+                        .padding(.bottom, 5)
                 }
             }
         }
     }
 }
-

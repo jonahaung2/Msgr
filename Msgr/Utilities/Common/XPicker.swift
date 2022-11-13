@@ -48,7 +48,6 @@ public struct XPicker<Item: XPickable>: View {
    public let title: String
    public let items: [Item]
    @Binding public  var pickedItem: Item
-
    public var body: some View {
       HStack {
          Text(title)

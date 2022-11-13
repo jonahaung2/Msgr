@@ -6,26 +6,28 @@
 //
 
 import Foundation
+import Firebase
 import FirebaseFirestore
+import FirebaseFirestoreSwift
 
 class UsersRepo {
 
     static let shared = UsersRepo()
     let reference = Firestore.firestore().collection("users")
 
-    func add(_ item: Contact_, completion: ((Error?) -> Void)? = nil) {
+    func add(_ item: Contact.Payload, completion: ((Error?) -> Void)? = nil) {
         FirestoreRepo.add(item, to: reference, completion: completion)
     }
 
-    func update(_ item: Contact_, completion: ((Error?) -> Void)? = nil) {
+    func update(_ item: Contact.Payload, completion: ((Error?) -> Void)? = nil) {
         FirestoreRepo.update(item, to: reference, completion: completion)
     }
 
-    func remove(_ item: Contact_, completion: @escaping (Error?)-> Void) {
+    func remove(_ item: Contact.Payload, completion: @escaping (Error?)-> Void) {
         FirestoreRepo.remove(item, to: reference, completion: completion)
     }
 
-    func fetch(_ queryItems: [Contact_.QueryFilter], limit: Int = 0) async -> [Contact_] {
+    func fetch(_ queryItems: [Contact.Payload.QueryFilter], limit: Int = 0) async -> [Contact.Payload] {
         var query = reference as Query
         queryItems.forEach {
             query = query.whereField($0.key, isEqualTo: $0.value)
@@ -36,7 +38,7 @@ class UsersRepo {
         return await FirestoreRepo.fetch(query: query)
     }
     
-    func fetch(_ queryItems: [Contact_.QueryFilter], limit: Int = 0, completion: @escaping (Result<[Contact_], Error>) -> Void) {
+    func fetch(_ queryItems: [Contact.Payload.QueryFilter], limit: Int = 0, completion: @escaping (Result<[Contact.Payload], Error>) -> Void) {
         var query = reference as Query
         queryItems.forEach {
             query = query.whereField($0.key, isEqualTo: $0.value)
@@ -46,7 +48,8 @@ class UsersRepo {
         }
         FirestoreRepo.fetch(query: query, completion: completion)
     }
-    func fetch(_ queryItems: [Contact_.QueryFilter], completion: @escaping (Result<Contact_?, Error>) -> Void) {
+    
+    func fetch(_ queryItems: [Contact.Payload.QueryFilter], completion: @escaping (Result<Contact.Payload?, Error>) -> Void) {
         var query = reference as Query
         queryItems.forEach {
             query = query.whereField($0.key, isEqualTo: $0.value)
@@ -54,7 +57,8 @@ class UsersRepo {
         query = query.limit(to: 1)
         FirestoreRepo.fetch(query: query, completion: completion)
     }
-    func search(_ queryItems: [Contact_.QueryFilter], limit: Int) async -> [Contact_] {
+
+    func search(_ queryItems: [Contact.Payload.QueryFilter], limit: Int) async -> [Contact.Payload] {
         var query = reference as Query
         queryItems.forEach {
             query = query
@@ -67,10 +71,10 @@ class UsersRepo {
 }
 
 
-extension Contact_ {
+extension Contact.Payload {
 
     enum QueryFilter: Hashable, Identifiable {
-        var id: Contact_.QueryFilter { self }
+        var id: Contact.Payload.QueryFilter { self }
         case id(String)
         case phone(String)
 

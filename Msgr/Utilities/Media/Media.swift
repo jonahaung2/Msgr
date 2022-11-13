@@ -15,7 +15,6 @@ class Media: NSObject {
     class func path(audioId: String) -> String?    { return path("media", audioId, "m4a")    }
 
     private class func path(_ dir: String, _ name: String, _ ext: String) -> String? {
-        
         let file = "\(name).\(ext)"
         let path = Dir.document(dir, and: file)
         

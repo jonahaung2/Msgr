@@ -12,12 +12,10 @@ class MessageCachingUtils: ObservableObject {
     private init() { }
     
     private var messageAuthorMapping = [String: String]()
-    private var messageAuthors = [String: Contact_]()
+    private var messageAuthors = [String: Contact.Payload]()
     private var messageAttachments = [String: Bool]()
     private var checkedMessageIds = Set<String>()
     private var quotedMessageMapping = [String: Msg]()
-    
-    @Published var currentScrolledFrame = CGRect.zero
     
     func authorId(for msg: Msg) -> String {
         if let userDisplayInfo = userDisplayInfo(for: msg) {
@@ -46,7 +44,7 @@ class MessageCachingUtils: ObservableObject {
         return userDisplayInfo.photoURL
     }
     
-    func authorInfo(from msg: Msg) -> Contact_ {
+    func authorInfo(from msg: Msg) -> Contact.Payload {
         if let userDisplayInfo = userDisplayInfo(for: msg) {
             return userDisplayInfo
         }
@@ -74,7 +72,7 @@ class MessageCachingUtils: ObservableObject {
     //        return quoted
     //    }
     
-    func userDisplayInfo(with id: String) -> Contact_? {
+    func userDisplayInfo(with id: String) -> Contact.Payload? {
         for userInfo in messageAuthors.values {
             if userInfo.id == id {
                 return userInfo
@@ -85,7 +83,7 @@ class MessageCachingUtils: ObservableObject {
     
     func clearCache() {
         messageAuthorMapping = [String: String]()
-        messageAuthors = [String: Contact_]()
+        messageAuthors = [String: Contact.Payload]()
         messageAttachments = [String: Bool]()
         checkedMessageIds = Set<String>()
         quotedMessageMapping = [String: Msg]()
@@ -93,7 +91,7 @@ class MessageCachingUtils: ObservableObject {
     
     // MARK: - private
     
-    private func userDisplayInfo(for msg: Msg) -> Contact_? {
+    private func userDisplayInfo(for msg: Msg) -> Contact.Payload? {
         if let userId = messageAuthorMapping[msg.id.str],
            let userDisplayInfo = messageAuthors[userId] {
             return userDisplayInfo
@@ -102,12 +100,12 @@ class MessageCachingUtils: ObservableObject {
         }
     }
     
-    private func saveUserDisplayInfo(for msg: Msg) -> Contact_ {
+    private func saveUserDisplayInfo(for msg: Msg) -> Contact.Payload {
         
         guard let contact = Contact.find(for: msg.senderId.str) else {
-            return .init("", "", "", "", pushToken: "")
+            return .init(id: "", name: "", phone: "", photoURL: "", pushToken: "")
         }
-        let contact_ = Contact_(contact)
+        let contact_ = Contact.Payload(contact)
         
         messageAuthorMapping[msg.id.str] = contact_.id
         messageAuthors[contact_.id] = contact_
@@ -137,11 +135,11 @@ class MessageCachingUtils: ObservableObject {
 
 extension Msg {
     
-    var authorDisplayInfo: Contact_ {
+    var authorDisplayInfo: Contact.Payload {
         MessageCachingUtils.shared.authorInfo(from: self)
     }
     
-    func userDisplayInfo(from id: String) -> Contact_? {
+    func userDisplayInfo(from id: String) -> Contact.Payload? {
         MessageCachingUtils.shared.userDisplayInfo(with: id)
     }
 }

@@ -14,19 +14,19 @@ extension Con {
         if let cCon = con(for: conId) {
             return cCon
         }
-        let context = PersistentContainer.shared.viewContext
+        let context = CoreDataStack.shared.viewContext
         let con = Con(context: context)
         con.id = conId
-        con.name = contact.name
+//        con.name = contact.name
         con.members_ = [CurrentUser.id, contact.id.str]
-        con.photoUrl = Media.path(userId: contact.id.str)
+//        con.photoUrl = contact.photoUrl ?? "https://media-exp1.licdn.com/dms/image/C5603AQEmuML1GXI9DQ/profile-displayphoto-shrink_800_800/0/1630504470059?e=1672272000&v=beta&t=lAsZRcQIW79CdEN3Fps8WTRGuotjMBN8c1PSttvOsWo"
         con.date = Date()
         return con
     }
 
 
     class func con(for id: String) -> Con? {
-        let context = PersistentContainer.shared.viewContext
+        let context = CoreDataStack.shared.viewContext
         let request = Con.fetchRequest(keyPath: "id", equalTo: id)
         request.fetchLimit = 1
         do {
@@ -39,14 +39,14 @@ extension Con {
     }
 
     class func delete(cCon: Con) {
-        PersistentContainer.shared.viewContext.delete(cCon)
+        CoreDataStack.shared.viewContext.delete(cCon)
     }
 
     class func cons() -> [Con] {
-        let context = PersistentContainer.shared.viewContext
+        let context = CoreDataStack.shared.viewContext
         let request = Con.fetchRequest()
-        request.predicate = .init(format: "hasMsgs == %@", NSNumber(true))
-        request.sortDescriptors = [NSSortDescriptor(key: "date", ascending: true)]
+//        request.predicate = .init(format: "hasMsgs == %@", NSNumber(true))
+        request.sortDescriptors = [NSSortDescriptor(key: "date", ascending: false)]
         do {
             return try context.fetch(request)
         }catch {

@@ -8,6 +8,7 @@
 import SwiftUI
 
 extension Msg {
+
     enum DeliveryStatus: Int16, CustomStringConvertible {
         case Sending, Sent, SendingFailed, Received, Read
         var description: String {
@@ -19,12 +20,11 @@ extension Msg {
             case .Read: return "Read"
             }
         }
-
         func iconName() -> String? {
             switch self {
             case .Sending: return "circlebadge"
             case .Sent: return "checkmark.circle.fill"
-            case .SendingFailed: return "exclamationmark.circle"
+            case .SendingFailed: return "exclamationmark.circle.fill"
             default: return nil
             }
         }

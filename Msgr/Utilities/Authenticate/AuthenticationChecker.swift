@@ -23,6 +23,7 @@ private struct AuthenticationCheckerModifier: ViewModifier {
                      } else {
                          authenticator.isUnlocked = true
                      }
+                     CurrentUser.update()
                  }
          }else {
             SignInView()

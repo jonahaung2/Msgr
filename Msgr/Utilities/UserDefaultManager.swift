@@ -21,9 +21,11 @@ final class UserDefaultManager: ObservableObject {
     let AppType = "App Type"
     let UseFaceID = "Use FaceID"
     let SaveLastVisitedPage = "SaveLastVisitedPage"
+    let TappedConId = "TappedConId"
 
     @AppStorage("pageSize") var isLoggedIn = false
-    @AppStorage("pushToken") var pushNotificationToken: String?
+//    @AppStorage("pushToken") var pushNotificationToken: String?
     @AppStorage("authVerificationID") var authVerificationID: String?
+    @AppStorage("TappedConId") var tappedConId: String?
 
 }

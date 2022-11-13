@@ -5,10 +5,8 @@
         <attribute name="bubbleCornorRadius" attributeType="Integer 16" defaultValueString="19" usesScalarValueType="YES"/>
         <attribute name="cellSpacing" attributeType="Integer 16" defaultValueString="1" usesScalarValueType="YES"/>
         <attribute name="date" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
-        <attribute name="hasMsgs" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="id" optional="YES" attributeType="String"/>
-        <attribute name="lastReadMsgId" optional="YES" attributeType="String"/>
-        <attribute name="members_" optional="YES" attributeType="Transformable" customClassName="[String]"/>
+        <attribute name="members_" attributeType="Transformable" customClassName="[String]"/>
         <attribute name="name" optional="YES" attributeType="String"/>
         <attribute name="photoUrl" optional="YES" attributeType="String"/>
         <attribute name="themeColor_" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>

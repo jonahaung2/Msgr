@@ -25,28 +25,31 @@ struct DraggableModifier : ViewModifier {
     let direction: Direction
     @State private var draggedOffset: CGSize = .zero
 
-
     func body(content: Content) -> some View {
-        let dragGesture = DragGesture(minimumDistance: 5, coordinateSpace: .local)
-            .onChanged { value in
-                let offset = direction.offset(for: value.translation)
-                let distance = abs(offset.width)
-                if distance < 200 {
-                    self.draggedOffset = offset
-                    if Int(distance) == 199 {
-                        HapticsEngine.shared.playSuccess()
-                    }
-                }
-            }
-            .onEnded { value in
-                if draggedOffset.width != 0 {
-                    draggedOffset.width = 0
-                    HapticsEngine.shared.playSuccess()
-                }
-
-            }
         content
             .offset(draggedOffset)
-            .gesture(dragGesture)
+            .highPriorityGesture(
+                DragGesture(minimumDistance: 10)
+                    .onChanged { value in
+                        let offset = direction.offset(for: value.translation)
+                        let distance = abs(offset.width)
+                        if distance < 200 {
+                            if Int(distance) > 190 {
+                                HapticsEngine.shared.playSuccess()
+                            } else {
+                                self.draggedOffset = offset
+                            }
+                        }
+                    }
+                    .onEnded { value in
+                        if draggedOffset.width != 0 {
+                            draggedOffset.width = 0
+                            HapticsEngine.shared.playSuccess()
+                        }
+                    }
+            )
+            .onAppear {
+                draggedOffset = .zero
+            }
     }
 }

@@ -5,164 +5,67 @@
 //  Created by Aung Ko Min on 7/3/22.
 //
 
+import SwiftUI
 import Contacts
-import PhoneNumberKit
+import GlobalNotificationSwift
 
 class ContactManager: ObservableObject {
 
-    private let phoneNumberKit = PhoneNumberKit()
+    @Published var searchText = ""
 
-    func loadContacts() {
-        let queue = OperationQueue()
-        queue.maxConcurrentOperationCount = 1
-        let context = PersistentContainer.shared.viewContext
-        let repo = UsersRepo.shared
-
-        var ops = [ContactSyncOperation]()
-        let contacts = ContactManager.getContacts()
-        for contact in contacts {
-            contact.phoneNumbers.forEach { phoneNumber in
-                do {
-                    let phoneNumber = try phoneNumberKit.parse(phoneNumber.value.stringValue, ignoreType: true)
-                    let formatted = phoneNumberKit.format(phoneNumber, toType: .e164)
-
-                    let name = contact.givenName + " " + contact.familyName
-                    let avatarData = contact.thumbnailImageData
-                    if let avatarData {
-                        Media.save(userId: formatted, data: avatarData)
-                    }
-                    let contact_ = Contact_(formatted, name, formatted, Media.path(userId: formatted), pushToken: nil)
-                    Contact.fetchOrCreate(contact_: contact_)
-
-                    let op = ContactSyncOperation(phoneNumber: formatted, context: context, repo: repo)
-                    ops.append(op)
-                } catch {
-                    print("Something went wrong")
-                }
-            }
+    private var contacts = [Contact]()
+    private var groups = [Con]()
+    var displayContacts: [Contact] {
+        if searchText.isEmpty {
+            return contacts
+        }else {
+            return contacts.filter{ $0.name.str.lowercased().contains(searchText.lowercased()) }
         }
-        queue.addOperations(ops, waitUntilFinished: false)
+    }
+    var displayGroups: [Con] {
+        if searchText.isEmpty {
+            return groups
+        }else {
+            return groups.filter{ $0.name.str.lowercased().contains(searchText.lowercased()) }
+        }
     }
 
-    class func getContacts() -> [CNContact] {
-        let contactStore = CNContactStore()
-        let keysToFetch = [
-            CNContactFormatter.descriptorForRequiredKeys(for: .fullName),
-            CNContactPhoneNumbersKey,
-            CNContactThumbnailImageDataKey] as [Any]
-        
-        var allContainers: [CNContainer] = []
+    init() {
+        GlobalNotificationCenter.shared.addObserver(self, for: .init(GroupContainer.appGroupId+".contact.didSave")) {[weak self] notification in
+            guard let self = self else { return }
+            DispatchQueue.main.async {
+                self.refresh()
+            }
+        }
+        refresh()
+    }
+
+    func sync() {
+        ContactsSyncOperations.startSync()
+    }
+
+    func deleteAll() {
+        let context = CoreDataStack.shared.viewContext
+
+        let request = Contact.fetchRequest()
+        request.includesPropertyValues = false
         do {
-            allContainers = try contactStore.containers(matching: nil)
+            let objects = try context.fetch(request)
+            for object in objects {
+                context.delete(object)
+            }
+            CoreDataStack.shared.save()
+            refresh()
         } catch {
-            print("Error fetching containers")
-        }
-        
-        var results: [CNContact] = []
-        
-        for container in allContainers {
-            let fetchPredicate = CNContact.predicateForContactsInContainer(withIdentifier: container.identifier)
-            
-            do {
-                let containerResults = try contactStore.unifiedContacts(matching: fetchPredicate, keysToFetch: keysToFetch as! [CNKeyDescriptor])
-                results.append(contentsOf: containerResults)
-            } catch {
-                print("Error fetching containers")
-            }
-        }
-        return results
-    }
-}
-
-import CoreData
-// Downloads entries created after the specified date.
-class ContactSyncOperation: Operation {
-
-    enum OperationError: Error {
-        case cancelled
-    }
-
-    private let context: NSManagedObjectContext
-    private let repo: UsersRepo
-    private let phoneNumber: String
-
-    var result: Result<Contact_?, Error>?
-
-    private var downloading = false
-    private var currentDownloadTask: DownloadTask?
-
-    init(phoneNumber: String, context: NSManagedObjectContext, repo: UsersRepo) {
-        self.phoneNumber = phoneNumber
-        self.context = context
-        self.repo = repo
-    }
-
-    override var isAsynchronous: Bool {
-        return true
-    }
-
-    override var isExecuting: Bool {
-        return downloading
-    }
-
-    override var isFinished: Bool {
-        return result != nil
-    }
-
-    override func cancel() {
-        super.cancel()
-        if let currentDownloadTask = currentDownloadTask {
-            currentDownloadTask.cancel()
+            print(error)
         }
     }
 
-    func finish(result: Result<Contact_?, Error>) {
-        guard downloading else { return }
-        if case .success(let success) = result {
-            if let contact_ = success {
-                do {
-                    let request = Contact.fetchRequest(keyPath: "phoneNumber", equalTo: phoneNumber)
-                    if let contact = (try context.fetch(request)).first {
-                        contact.id = contact_.id
-                        contact.name = contact_.name
-                        contact.name = contact_.name
-                        contact.photoUrl = contact_.photoURL
-                        contact.pushToken = contact_.pushToken
-                    } else {
-                        let contact = Contact(context: context)
-                        contact.id = contact_.id
-                        contact.name = contact_.name
-                        contact.phoneNumber = contact_.phone
-                        contact.photoUrl = contact_.photoURL
-                        contact.pushToken = contact_.pushToken
-                    }
-                } catch {
-                    print(error)
-                }
-            }
+    func refresh() {
+        contacts = Contact.fecthAll()
+        groups = Con.cons().filter{ $0.members_?.count ?? 0 > 2 }
+        withAnimation {
+            objectWillChange.send()
         }
-
-        willChangeValue(forKey: #keyPath(isExecuting))
-        willChangeValue(forKey: #keyPath(isFinished))
-
-        downloading = false
-        self.result = result
-        currentDownloadTask = nil
-
-        didChangeValue(forKey: #keyPath(isFinished))
-        didChangeValue(forKey: #keyPath(isExecuting))
-        print(result)
-    }
-
-    override func start() {
-        willChangeValue(forKey: #keyPath(isExecuting))
-        downloading = true
-        didChangeValue(forKey: #keyPath(isExecuting))
-
-        guard !isCancelled else {
-            finish(result: .failure(OperationError.cancelled))
-            return
-        }
-        repo.fetch([.phone(phoneNumber)], completion: finish)
     }
 }

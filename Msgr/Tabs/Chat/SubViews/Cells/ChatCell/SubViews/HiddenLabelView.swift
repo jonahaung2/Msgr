@@ -18,6 +18,6 @@ struct HiddenLabelView: View {
             .foregroundStyle(.secondary)
             .padding(padding)
             .padding(.horizontal)
-            .transition(.scale)
+            .transition(.opacity)
     }
 }

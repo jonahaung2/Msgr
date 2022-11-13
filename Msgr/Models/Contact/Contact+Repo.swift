@@ -13,36 +13,15 @@ extension Contact {
     var conId: String {
         guard let id = self.id else { fatalError() }
         let currentUserId = CurrentUser.id
-        return id > currentUserId ? currentUserId : id + currentUserId
+        return [id, currentUserId].sorted().joined()
     }
+
     func con() -> Con {
         Con.fetchOrCreate(contact: self)
     }
 
-    convenience init(id: String, name: String, phoneNumber: String, photoUrl: String, pushToken: String?) {
-        self.init(context: PersistentContainer.shared.viewContext)
-        self.id = id
-        self.name = name
-        self.phoneNumber = phoneNumber
-        self.photoUrl = photoUrl
-        self.pushToken = pushToken
-    }
-
-    class func fetchOrCreate(contact_: Contact_) {
-        if !hasSaved(for: contact_.id) {
-            _ = Contact.init(id: contact_.id, name: contact_.name, phoneNumber: contact_.phone, photoUrl: contact_.photoURL.str, pushToken: contact_.pushToken)
-        }
-    }
-
-    convenience init(phoneNumber: String, name: String) {
-        self.init(context: PersistentContainer.shared.viewContext)
-        self.id = phoneNumber
-        self.name = name
-        self.phoneNumber = phoneNumber
-    }
-
     class func find(for id: String) -> Contact? {
-        let context = PersistentContainer.shared.viewContext
+        let context = CoreDataStack.shared.viewContext
         let request = Contact.fetchRequest()
         request.fetchLimit = 1
         request.predicate = .init(format: "id == %@", id)
@@ -56,7 +35,7 @@ extension Contact {
     }
 
     class func hasSaved(for id: String) -> Bool {
-        let context = PersistentContainer.shared.viewContext
+        let context = CoreDataStack.shared.viewContext
         let request = Contact.fetchRequest()
         request.resultType = .countResultType
         request.fetchLimit = 1
@@ -71,7 +50,7 @@ extension Contact {
     }
 
     class func fecthAll() -> [Contact] {
-        let context = PersistentContainer.shared.viewContext
+        let context = CoreDataStack.shared.viewContext
         let request = Contact.fetchRequest()
         do {
             let results = try context.fetch(request)
@@ -83,6 +62,6 @@ extension Contact {
     }
 
     class func delete(cContact: Contact) {
-        PersistentContainer.shared.viewContext.delete(cContact)
+        CoreDataStack.shared.viewContext.delete(cContact)
     }
 }

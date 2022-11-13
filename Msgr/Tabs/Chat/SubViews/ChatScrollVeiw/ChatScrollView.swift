@@ -26,26 +26,26 @@ struct ChatScrollView<Content: View>: View {
                         }
                     )
             }
-            .scrollContentBackground(.hidden)
+            .scrollContentBackground(.visible)
             .scrollDismissesKeyboard(.immediately)
-            .background(viewModel.con.bgImage.image)
             .coordinateSpace(name: scrollAreaId)
             .flippedUpsideDown()
             .onPreferenceChange(FramePreferenceKey.self) { frame in
-                DispatchQueue.main.async {
-                    if let frame {
+                if let frame {
+                    DispatchQueue.main.async {
                         viewModel.didUpdateVisibleRect(frame)
                     }
                 }
             }
             .onChange(of: viewModel.scrollItem) { newValue in
                 if let newValue {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                    defer {
                         self.viewModel.scrollItem = nil
                     }
                     scroller.scroll(to: newValue)
                 }
             }
+
         }
     }
 }

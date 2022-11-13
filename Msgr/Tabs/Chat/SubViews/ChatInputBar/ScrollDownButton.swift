@@ -8,9 +8,9 @@
 import SwiftUI
 
 struct ScrollDownButton: View {
-
+    
     @EnvironmentObject private var viewModel: ChatViewModel
-
+    
     var body: some View {
         HStack(alignment: .bottom) {
             if viewModel.isTyping {
@@ -22,9 +22,8 @@ struct ScrollDownButton: View {
                 Button(action: didTapButton) {
                     Image(systemName: "chevron.down.circle.fill")
                         .resizable()
-                        .frame(width: 35, height: 35)
-                        .foregroundColor(Color(uiColor: .systemBackground))
-                        .shadow(radius: 2)
+                        .frame(width: 40, height: 40)
+                        .foregroundColor(Color.sectionBackground)
                         .padding()
                 }
                 .transition(.scale(scale: 0.1))

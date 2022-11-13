@@ -6,7 +6,9 @@
 //
 
 import Foundation
+import Firebase
 import FirebaseAuth
+import FirebaseMessaging
 
 struct CurrentUser {
 
@@ -16,18 +18,28 @@ struct CurrentUser {
         user?.uid ?? ""
     }
     static var name: String {
-        user?.displayName ?? ""
+        user?.displayName ?? (isDemo ? "Jonah Aung Ko Min" : "Aung Ko Min")
     }
     static var phone: String {
-        user?.phoneNumber ?? ""
+        user?.phoneNumber ?? "+6598765432"
     }
 
     static var photoURL: String {
-        user?.photoURL?.absoluteString ?? MockData.userProfilePhotoURL.absoluteString
+        user?.photoURL?.absoluteString ?? "https://media-exp1.licdn.com/dms/image/C5603AQEmuML1GXI9DQ/profile-displayphoto-shrink_800_800/0/1630504470059?e=1672272000&v=beta&t=lAsZRcQIW79CdEN3Fps8WTRGuotjMBN8c1PSttvOsWo"
     }
 
-    static var contact_: Contact_ {
-        .init(id, name, phone, photoURL, pushToken: UserDefaultManager.shared.pushNotificationToken)
+    static var pushToken: String? {
+        GroupContainer.pushToken
+    }
+    static var contactPL: Contact.Payload {
+        .init(id: id, name: name, phone: phone, photoURL: photoURL, pushToken: pushToken)
     }
 
+    static func update() {
+        UsersRepo.shared.update(contactPL)
+    }
+
+    static var isDemo: Bool {
+        phone == "+6598765432"
+    }
 }

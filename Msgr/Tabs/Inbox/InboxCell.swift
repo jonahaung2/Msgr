@@ -9,11 +9,11 @@ import SwiftUI
 
 struct InBoxCell: View {
 
-    @EnvironmentObject private var conViewModel: ConViewModel
+    let inboxCellViewModel: InboxCellViewModel
 
     var body: some View {
         HStack {
-            AvatarView(id: conViewModel.id)
+            AvatarView(id: inboxCellViewModel.id)
                 .frame(width: 50, height: 50)
 
 //            if let msg = con.lastMsg() {
@@ -31,34 +31,38 @@ struct InBoxCell: View {
 //            }
 //            .frame(width: 50, height: 50)
 //
-            if let msg = conViewModel.lasMsg {
-                VStack(alignment: .leading, spacing: 2) {
-                    HStack {
-                        Text(conViewModel.name)
-                            .font(.headline)
-                        +
-                        Text(" \(Msg.count(for: conViewModel.id)) ")
-                            .italic()
-                            .font(.caption2)
-
-//                        Text(msg.date?.toStringWithRelativeTime() ?? "" + " ")
-//                            .font(.footnote)
-                    }
-
-                    Group {
-                        Text(msg.text.str)
-                        +
-                        Text(" ")
-                        +
-                        Text(msg.deliveryStatus.description)
-                            .font(.caption)
-                    }
-                    .lineLimit(3)
-                    .foregroundStyle(foregroundStyle(for: msg))
+            VStack(alignment: .leading, spacing: 2) {
+                HStack {
+                    Text(inboxCellViewModel.con.nameX)
+                        .font(.headline)
+                    +
+                    Text(" \(inboxCellViewModel.msgCount) ")
+                        .italic()
+                        .font(.caption2)
+                    Text(inboxCellViewModel.lastMsg.date?.toStringWithRelativeTime() ?? "" + " ")
+                        .font(.footnote)
                 }
+
+                Group {
+                    Text(inboxCellViewModel.lastMsg.text.str)
+                    +
+                    Text(" ")
+                    +
+                    Text(inboxCellViewModel.lastMsg.deliveryStatus.description)
+                        .font(.caption)
+                }
+                .lineLimit(3)
+                .foregroundStyle(foregroundStyle(for: inboxCellViewModel.lastMsg))
             }
         }
-        .tapToPush(ChatView(_con: conViewModel.con))
+        .background(
+            Button(action: {
+                ViewRouter.shared.routes.appendUnique(.chatView(conId: inboxCellViewModel.con.id.str))
+            }, label: {
+                Color.clear
+            })
+        )
+        .transition(.opacity)
     }
 
     private func foregroundStyle(for msg: Msg) -> some ShapeStyle {

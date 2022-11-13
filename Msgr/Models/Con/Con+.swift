@@ -10,9 +10,10 @@ import SwiftUI
 extension Con {
 
     enum ConType {
-        case single(Contact_?)
-        case group([Contact_])
+        case single(Contact.Payload)
+        case group([Contact.Payload])
     }
+
     var themeColor: ThemeColor {
         get { ThemeColor(rawValue: themeColor_) ?? .Blue }
         set { themeColor_ = newValue.rawValue }
@@ -27,16 +28,14 @@ extension Con {
         set { bgImage_ = newValue.rawValue }
     }
 
-    var contact_: Contact_? {
+    var contactPayload: Contact.Payload? {
         members.filter{ $0.id != CurrentUser.id }.first
     }
     
-    var members: [Contact_] {
+    var members: [Contact.Payload] {
         get {
-            guard let members_ else {
-                return []
-            }
-            var values = [Contact_]()
+            guard let members_ else { return [] }
+            var values = [Contact.Payload]()
             members_.forEach { mem in
                 if let x = MessageCachingUtils.shared.userDisplayInfo(with: mem) {
                     values.append(x)
@@ -52,7 +51,19 @@ extension Con {
     }
 
     var conType: ConType {
-        let filtered = members.filter{ $0.phone != CurrentUser.phone  }
-        return filtered.count == 1 ? .single(filtered.first) : .group(filtered)
+        let filtered = members.filter{ $0.id != CurrentUser.id }
+        guard !filtered.isEmpty else {
+            return .single(.init(id: "", name: "", phone: "", photoURL: ""))
+        }
+        return filtered.count == 1 ? .single(filtered[0]) : .group(filtered)
+    }
+
+    var nameX: String {
+        switch conType {
+        case .single(let x):
+            return x.name
+        case .group(let members):
+            return name ?? members.prefix(3).compactMap{ $0.name.first }.map{ String($0) }.joined(separator: ", ")
+        }
     }
 }

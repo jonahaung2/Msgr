@@ -1,8 +1,8 @@
 //
-//  CoreData+Ext.swift
+//  FetchCache.swift
 //  Msgr
 //
-//  Created by Aung Ko Min on 27/10/22.
+//  Created by Aung Ko Min on 6/11/22.
 //
 
 import Foundation
@@ -15,10 +15,8 @@ extension NSManagedObject {
 }
 
 extension NSEntityDescription {
-    class func insertNewObject<T: NSManagedObject>(
-        into context: NSManagedObjectContext,
-        for request: NSFetchRequest<T>
-    ) -> T {
+    class func insertNewObject<T: NSManagedObject>(into context: NSManagedObjectContext, for request: NSFetchRequest<T>
+) -> T {
         let obj = T(context: context)
         request.entity = obj.entity
         FetchCache.shared.set(request, objectIds: [obj.objectID])
@@ -45,6 +43,7 @@ extension NSFetchRequestGettable where Self: NSManagedObject {
 extension NSManagedObject: NSFetchRequestGettable {}
 
 extension NSManagedObject {
+    
     static func load<T: NSManagedObject>(by id: String, context: NSManagedObjectContext) -> [T] {
         load(keyPath: idKey, equalTo: id, context: context)
     }
@@ -67,6 +66,7 @@ extension NSManagedObject {
 }
 
 class FetchCache {
+
     fileprivate static let shared = FetchCache()
     private let queue = DispatchQueue(label: "io.stream.com.fetch-cache", qos: .userInitiated, attributes: .concurrent)
     private var cache = [NSFetchRequest<NSFetchRequestResult>: [NSManagedObjectID]]()
@@ -82,6 +82,7 @@ class FetchCache {
     }
 
     fileprivate func get<T>(_ request: NSFetchRequest<T>) -> [NSManagedObjectID]? where T: NSFetchRequestResult {
+
         guard let request = request as? NSFetchRequest<NSFetchRequestResult> else {
             print("Request should have a generic type conforming to NSFetchRequestResult")
             return nil

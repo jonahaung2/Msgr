@@ -5,6 +5,8 @@
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
 		<string>com.aungkomin.Msgr.v3.msgFetch</string>
+		<string>refresh</string>
+		<string>com.jonahaung.Msgr.pushSend</string>
 	</array>
 	<key>CFBundleURLTypes</key>
 	<array>

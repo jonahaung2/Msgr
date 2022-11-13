@@ -6,36 +6,24 @@
 //
 
 import SwiftUI
-import CoreData
 
 struct InboxView: View {
 
-    @Environment(\.managedObjectContext) private var viewContext
-    @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Con.date, ascending: true)],
-        predicate: .init(format: "hasMsgs == TRUE"),
-        animation: .default)
-    private var items: FetchedResults<Con>
+    @StateObject private var viewModel = InboxViewModel()
 
     var body: some View {
         List {
-            ForEach(items) {
-                InBoxCell()
-                    .environmentObject(ConViewModel(con: $0))
+            ForEach(viewModel.items) { item in
+                InBoxCell(inboxCellViewModel: item)
             }
             .onDelete(perform: deleteItems)
+        }.onAppear {
+            viewModel.refreshView()
         }
     }
 
     private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            offsets.map { items[$0] }.forEach(viewContext.delete)
-            do {
-                try viewContext.save()
-            } catch {
-                let nsError = error as NSError
-                fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
-            }
-        }
+        offsets.map { viewModel.items[$0].con }.forEach(CoreDataStack.shared.viewContext.delete)
+        viewModel.refreshView()
     }
 }

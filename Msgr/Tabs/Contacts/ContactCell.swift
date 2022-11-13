@@ -13,20 +13,17 @@ struct ContactCell: View {
 
     var body: some View {
         HStack {
-            if let path = Media.path(userId: contact.id.str), let image = UIImage(path: path) {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 25, height: 25)
-                    .clipShape(Circle())
-            }
-            
-            if contact.isMsgUser {
-                XIcon(.pin)
-            }
+            ContactAvatarView(id: contact.id.str, urlString: contact.photoUrl.str, size: 25)
             Text(contact.name.str)
-                .badge(contact.phoneNumber.str)
         }
-        .tapToPush(ChatView(_contact: contact))
+        .background(
+            Button(action: {
+                if contact.id != CurrentUser.id {
+                    ViewRouter.shared.routes.appendUnique(.chatView(conId: Con.fetchOrCreate(contact: contact).id.str))
+                }
+            }, label: {
+                Color.clear
+            })
+        )
     }
 }

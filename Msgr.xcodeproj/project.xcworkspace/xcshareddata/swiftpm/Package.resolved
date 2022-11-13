@@ -37,6 +37,15 @@
       }
     },
     {
+      "identity" : "globalnotificationswift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/jonahaung/GlobalNotificationSwift",
+      "state" : {
+        "branch" : "main",
+        "revision" : "5510b12b9d9704f7153c246db1efad813833a07f"
+      }
+    },
+    {
       "identity" : "googleappmeasurement",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/google/GoogleAppMeasurement.git",

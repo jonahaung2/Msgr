@@ -12,7 +12,7 @@ public struct TapToPushStyle<Destination: View>: ViewModifier {
     let destination: Destination
     
     public func body(content: Content) -> some View {
-        NavigationLink(destination: destination) {
+        NavigationLink(destination: LazyView(destination)) {
             content
         }
     }

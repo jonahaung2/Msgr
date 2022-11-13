@@ -27,7 +27,7 @@ struct Operations {
         downloadFromServer.addDependency(passTimestampToServer)
 
 
-        let addToStore = AddEntriesToStoreOperation(context: context)
+        let addToStore = AddEntriesToStoreOperation()
 
         let passServerResultsToStore = BlockOperation { [unowned downloadFromServer, unowned addToStore] in
             guard case let .success(entries)? = downloadFromServer.result else {
@@ -81,7 +81,7 @@ class DownloadEntriesFromServerOperation: Operation {
     private let server: MockServer
     var sinceDate: Date?
     
-    var result: Result<[Msg_], Error>?
+    var result: Result<[Msg.Payload], Error>?
     
     private var downloading = false
     private var currentDownloadTask: DownloadTask?
@@ -115,7 +115,7 @@ class DownloadEntriesFromServerOperation: Operation {
         }
     }
     
-    func finish(result: Result<[Msg_], Error>) {
+    func finish(result: Result<[Msg.Payload], Error>) {
         guard downloading else { return }
         
         willChangeValue(forKey: #keyPath(isExecuting))
@@ -144,33 +144,16 @@ class DownloadEntriesFromServerOperation: Operation {
 }
 
 
-
-// An extension to create a FeedEntry object from the server representation of an entry.
-extension Msg {
-    convenience init(context: NSManagedObjectContext, msg_: Msg_) {
-        self.init(context: context)
-        self.id = msg_.id
-        self.conId = msg_.conId
-        self.senderId = msg_.senderId
-        self.text = msg_.text
-        self.date = Date()
-        self.msgType_ = msg_.msgType
-        try? context.save()
-    }
-}
-
 // Add entries returned from the server to the Core Data store.
 class AddEntriesToStoreOperation: Operation {
-    private let context: NSManagedObjectContext
-    var entries: [Msg_]?
+
+    var entries: [Msg.Payload]?
     var delay: TimeInterval = 1
 
-    init(context: NSManagedObjectContext) {
-        self.context = context
-    }
+    override init() {}
     
-    convenience init(context: NSManagedObjectContext, entries: [Msg_], delay: TimeInterval? = nil) {
-        self.init(context: context)
+    convenience init(entries: [Msg.Payload], delay: TimeInterval? = nil) {
+        self.init()
         self.entries = entries
         if let delay = delay {
             self.delay = delay
@@ -180,25 +163,18 @@ class AddEntriesToStoreOperation: Operation {
     override func main() {
         guard let entries = entries else { return }
 
-        context.performAndWait {
-            do {
-                for entry in entries {
-                    _ = Msg(context: context, msg_: entry)
-                    
-                    print("Adding entry with timestamp: \(entry.date)")
-                    
-                    // Simulate a slow process by sleeping
-                    if delay > 0 {
-                        Thread.sleep(forTimeInterval: delay)
-                    }
-                    try context.save()
+        for entry in entries {
+            CoreDataStore.shared.insert(payload: entry, informSavedNotification: false)
 
-                    if isCancelled {
-                        break
-                    }
-                }
-            } catch {
-                print("Error adding entries to store: \(error)")
+            print("Adding entry with timestamp: \(entry.date)")
+
+            // Simulate a slow process by sleeping
+            if delay > 0 {
+                Thread.sleep(forTimeInterval: delay)
+            }
+
+            if isCancelled {
+                break
             }
         }
     }

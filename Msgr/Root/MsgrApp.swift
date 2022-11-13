@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import BackgroundTasks
 
 @main
 struct MsgrApp: App {
@@ -14,24 +15,38 @@ struct MsgrApp: App {
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
-        WindowGroup {
+        WindowGroup("mMsgr") {
             MainTabView()
-                .environment(\.managedObjectContext, appDelegate.persistance.viewContext)
+                .environment(\.managedObjectContext, CoreDataStack.shared.viewContext)
                 .environmentObject(appDelegate.authenticator)
-                .environmentObject(appDelegate.server)
                 .environmentObject(appDelegate.pushNotificationManager)
-                .onChange(of: scenePhase) { phase in
-                    switch phase {
-                    case .active:
-                        print("active")
-                    case .inactive:
-                        print("inactive")
-                    case .background:
-                        print("background")
-                    @unknown default:
-                        fatalError()
-                    }
+                .environmentObject(UserDefaultManager.shared)
+                .environmentObject(ViewRouter.shared)
+                .task {
+                    scheduleAppRefresh()
                 }
         }
+        .backgroundTask(.appRefresh("refresh")) {
+            await handleAppRefresh()
+        }
+    }
+}
+
+extension MsgrApp {
+
+    private func scheduleAppRefresh() {
+        let request = BGAppRefreshTaskRequest(identifier: "refresh")
+        request.earliestBeginDate = Date(timeIntervalSinceNow: 0.5 * 60)
+        do {
+            try BGTaskScheduler.shared.submit(request)
+            print("refresh scheduled")
+        } catch {
+            print(error)
+        }
+    }
+
+    func handleAppRefresh() async {
+
+        ContactsSyncOperations.startSync()
     }
 }

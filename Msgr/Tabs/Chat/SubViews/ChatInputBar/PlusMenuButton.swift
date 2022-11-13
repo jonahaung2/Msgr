@@ -13,8 +13,8 @@ struct PlusMenuButton: View {
     
     var body: some View {
         Button {
+            viewModel.datasource.allMsgs.forEach{( $0.deliveryStatus = .Read )}
             triggerHapticFeedback(style: .rigid)
-            viewModel.simulateHasRead()
         } label: {
             Image(systemName: "camera.macro")
                 .resizable()

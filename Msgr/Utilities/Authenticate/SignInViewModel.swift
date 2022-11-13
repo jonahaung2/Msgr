@@ -6,10 +6,10 @@
 //
 
 import Foundation
+import Firebase
 import FirebaseAuth
 import CountryPhoneCodeTextField
 import FirebaseFirestore
-import FirebaseFirestoreSwift
 
 final class SignInViewModel: ObservableObject {
 
@@ -77,7 +77,7 @@ final class SignInViewModel: ObservableObject {
     }
 
     private func updateUserToFirestore(user: User) {
-        let contact = Contact_(user.uid, "Aung Ko Min", user.phoneNumber.str, "http://www.goodmorningimagesdownload.com/wp-content/uploads/2020/11/Facebook-Profile-Images-65.jpg", pushToken: UserDefaultManager.shared.pushNotificationToken)
+        let contact = Contact.Payload(id: user.uid, name: "Aung Ko Min", phone: user.phoneNumber.str, photoURL: "http://www.goodmorningimagesdownload.com/wp-content/uploads/2020/11/Facebook-Profile-Images-65.jpg", pushToken: CurrentUser.pushToken.str)
         
         if let dic = contact.dictionary {
             Firestore.firestore().collection("users").document(contact.id).setData(dic, merge: true) { error in
@@ -100,11 +100,10 @@ final class SignInViewModel: ObservableObject {
                 self.errorText = error.localizedDescription
             } else if let result {
                 let user = result.user
-                let contact = Contact_(user.uid, "Jonah Aung", "+6598765432", "http://www.goodmorningimagesdownload.com/wp-content/uploads/2020/11/Facebook-Profile-Images-65.jpg", pushToken: UserDefaultManager.shared.pushNotificationToken)
+                let payload = Contact.Payload(id: user.uid, name: "Jonah Aung", phone: "+6598765432", photoURL: "http://www.goodmorningimagesdownload.com/wp-content/uploads/2020/11/Facebook-Profile-Images-65.jpg", pushToken: CurrentUser.pushToken.str)
 
-                if let dic = contact.dictionary {
-                    print(dic)
-                    Firestore.firestore().collection("users").document(contact.id).setData(dic, merge: true) { error in
+                if let dic = payload.dictionary {
+                    Firestore.firestore().collection("users").document(payload.id).setData(dic, merge: true) { error in
                         if let error {
                             self.errorText = error.localizedDescription
                         } else {

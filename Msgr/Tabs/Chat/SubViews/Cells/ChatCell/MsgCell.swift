@@ -21,7 +21,7 @@ struct MsgCell: View {
                 Spacer(minLength: 15)
             }
 
-            HStack(alignment: .bottom, spacing: 2) {
+            HStack(alignment: .bottom, spacing: 0) {
                 leftView()
                 
                 VStack(alignment: msg.recieptType.hAlignment, spacing: 2) {
@@ -48,16 +48,11 @@ struct MsgCell: View {
                 Spacer(minLength: ChatKit.cellAlignmentSpacing)
             } else {
                 VStack {
-                    if style.showAvatar {
-                        let userInfo = chatViewModel.cache.authorInfo(from: msg)
-                        if let first = userInfo.name.first, let initial = String(first) {
-                            Image(systemName: initial.lowercased() + ".circle.fill")
-                                .font(.title2)
-                                .foregroundStyle(.tertiary)
-                        }
+                    if style.showAvatar, let contact = chatViewModel.con.contactPayload {
+                        ContactAvatarView(id: contact.id, urlString: contact.photoURL.str, size: ChatKit.cellLeftRightViewWidth)
                     }
                 }
-                .frame(width: ChatKit.cellLeftRightViewWidth)
+                .frame(width: ChatKit.cellLeftRightViewWidth + 10)
             }
         }
     }
@@ -67,10 +62,11 @@ struct MsgCell: View {
             if msg.recieptType == .Receive {
                 Spacer(minLength: ChatKit.cellAlignmentSpacing)
             } else {
-                VStack(alignment: .leading) {
+                VStack {
                     CellProgressView(progress: msg.deliveryStatus)
+                        .padding(.trailing, 5)
                 }
-                .frame(width: ChatKit.cellMsgStatusSize)
+                .frame(width: ChatKit.cellLeftRightViewWidth)
             }
         }
     }
@@ -79,12 +75,9 @@ struct MsgCell: View {
         Group {
             switch msg.msgType {
             case .Text:
-                VStack(spacing: 0) {
-                    TextBubble(text: msg.text.str)
-
-                }
-                .foregroundColor(style.textColor)
-                .background(style.bubbleShape.fill(style.bubbleColor.opacity(msg.recieptType == .Receive ? 1 : msg.deliveryStatus == .Sent ? 1 : 0.8)))
+                TextBubble(text: msg.text.str)
+                    .foregroundColor(style.textColor)
+                    .background(style.bubbleShape.fill(style.bubbleColor))
             case .Image:
                 ImageBubble()
             case .Location:
@@ -95,8 +88,8 @@ struct MsgCell: View {
                 EmptyView()
             }
         }
-        .highPriorityGesture(
-            TapGesture(count: 2)
+        .gesture(
+            TapGesture(count: 1)
                 .onEnded {
                     HapticsEngine.shared.playTick()
                     withAnimation {

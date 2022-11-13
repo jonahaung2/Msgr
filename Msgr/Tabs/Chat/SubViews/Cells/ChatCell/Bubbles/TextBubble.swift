@@ -10,6 +10,7 @@ import SwiftUI
 struct TextBubble: View {
     let text: String
     var body: some View {
+        
         Text(text )
             .padding(.horizontal, 12)
             .padding(.vertical, 6)

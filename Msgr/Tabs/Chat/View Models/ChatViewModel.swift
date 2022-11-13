@@ -12,7 +12,6 @@ final class ChatViewModel: ObservableObject {
 
     @Published var con: Con
     @Published var scrollItem: ScrollItem?
-    @Published var inputText = ""
     @Published var selectedId: String?
     @Published var showScrollToLatestButton = false
     @Published var isTyping = false
@@ -28,50 +27,38 @@ final class ChatViewModel: ObservableObject {
         datasource
             .$allMsgs
             .removeDuplicates()
-            .receive(on: RunLoop.main)
+            .debounce(for: 0.1, scheduler: DispatchQueue.main)
             .sink {[weak self] value in
                 guard let self = self else { return }
-                withAnimation {
+                withAnimation(.easeOut(duration: 0.2)) {
                     self.objectWillChange.send()
                 }
             }
             .store(in: &cancellables)
+
         NotificationCenter.default
-            .publisher(for: .MsgNoti)
+            .publisher(for: .msgNoti(for: con.id.str))
+            .compactMap{ $0.msgNoti }
             .receive(on: RunLoop.main)
             .sink { [weak self] value in
                 guard let self = self else { return }
-                self.didReceiveNoti(value)
+                self.didRecieveNoti(value)
             }
             .store(in: &cancellables)
-//        cache
-//            .$currentScrolledFrame
-//            .debounce(for: 0.2, scheduler: RunLoop.main)
-//            .removeDuplicates()
-//            .sink { [weak self] value in
-//                guard let self = self else { return }
-//                self.didUpdateVisibleRect(value)
-//            }
-//            .store(in: &cancellables)
-
     }
-}
 
-// Receive Updates
-extension ChatViewModel {
-    private func didReceiveNoti(_ outputt: NotificationCenter.Publisher.Output) {
-        guard let noti = outputt.msgNoti else { return }
+    private func didRecieveNoti(_ noti: MsgNoti) {
         switch noti.type {
-        case .New(let msg):
-            datasource.insert(msg, at: 0, animated: true)
-            Audio.playMessageIncoming()
-        case .Typing(_):
+        case .New(let payload):
+            if let msg = Msg.msg(for: payload.id) {
+                datasource.allMsgs.insert(msg, at: 0)
+            }
+        default:
             break
-        case .Update(let id):
-            print(id)
         }
     }
 }
+
 
 // Scrolling
 extension ChatViewModel {
@@ -99,44 +86,17 @@ extension ChatViewModel {
 //
 extension ChatViewModel {
     
-    func sendMessage() {
-        if inputText.isWhitespace {
-            withAnimation(.interactiveSpring()) {
-                inputText = Lorem.random
-            }
-            return
-        }
-        let msg = Msg.create(text: inputText, conId: con.id.str, senderId: CurrentUser.id)
-        datasource.insert(msg, at: 0, animated: false)
-        inputText.removeAll()
-        MsgSender.shard.send(msg_: Msg_(msg: msg))
+    func sendMessage(text: String) {
+        guard let contactPayload = con.contactPayload else { return }
+        let msgPayload = Msg.Payload(id: UUID().uuidString, text: text, date: .now, conId: con.id.str, senderId: CurrentUser.id, msgType: Msg.MsgType.Text.rawValue)
+        CoreDataStore.shared.insert(payload: msgPayload, informSavedNotification: true)
+        MsgSender.shard.send(msgPayload: msgPayload, contactPayload: contactPayload)
     }
 
-    func simulatePushNoti() {
-        guard let contact_ = con.contact_ else { return }
-        let msg_ = Msg_(id: UUID().uuidString, text: Lorem.random, date: Date(), conId: con.id.str, senderId: contact_.id, msgType: Msg.MsgType.Text.rawValue)
-        if let token = UserDefaultManager.shared.pushNotificationToken {
-            print(token)
-            MsgSender.shard.sendIncoming(msg_: msg_, token: token)
-        }
-    }
-    
     func simulateDemoMsg() {
-        guard let contact_ = con.contact_ else { return }
-        let msg = Msg.create(text: Lorem.random, conId: con.id.str, senderId: contact_.id)
-        msg.deliveryStatus = .Received
-        DispatchQueue.performSynchronouslyOnMainQueue {
-            self.datasource.insert(msg, at: 0, animated: true)
-        }
-    }
-
-    func simulateHasRead() {
-        guard let last = datasource.msgs.first, let date = last.date else { return }
-        datasource.msgs.filter{ $0.deliveryStatus.rawValue < Msg.DeliveryStatus.Sent.rawValue && $0.date ?? Date() <= date }.forEach { msg in
-            if msg.recieptType == .Send {
-                msg.deliveryStatus = .Sent
-            }
-        }
+        guard let contact = con.contactPayload else { return }
+        let msg_ = Msg.Payload(id: UUID().uuidString, text: Lorem.random, date: .now, conId: con.id.str, senderId: contact.id, msgType: Msg.MsgType.Text.rawValue)
+        CoreDataStore.shared.insert(payload: msg_, informSavedNotification: true)
     }
 }
 
@@ -176,7 +136,6 @@ extension ChatViewModel {
 
             if let previousMsg {
                 showTimeSeparater = self.canShowTimeSeparater(previousMsg.date!, this.date!)
-
                 if
                     (this.recieptType != previousMsg.recieptType ||
                      this.msgType != previousMsg.msgType ||
@@ -194,7 +153,6 @@ extension ChatViewModel {
 
             if let nextMsg {
                 showTimeSeparater = self.canShowTimeSeparater(this.date!, nextMsg.date!)
-
                 if
                     (this.recieptType != nextMsg.recieptType ||
                      this.msgType != nextMsg.msgType ||
@@ -239,7 +197,7 @@ extension ChatViewModel {
                     rectCornors.formUnion(.bottomLeft)
                     showAvatar = true
                 }
-            }else {
+            } else {
                 rectCornors.formUnion(.bottomLeft)
                 showAvatar = true
             }

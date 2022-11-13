@@ -15,8 +15,10 @@ struct CellProgressView: View {
         Group {
             if let iconName = progress.iconName() {
                 Image(systemName: iconName)
-                    .foregroundStyle(.tertiary)
                     .imageScale(.small)
+//                    .resizable()
+//                    .scaledToFit()
+                    .foregroundStyle(.tertiary)
             }
         }
     }

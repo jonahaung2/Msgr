@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct ModalView<T: View>: UIViewControllerRepresentable {
+    
     let view: T
     let isModal: Bool
     let onDismissalAttempt: (()->())?
