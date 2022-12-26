@@ -13,17 +13,19 @@ struct ContactCell: View {
 
     var body: some View {
         HStack {
-            ContactAvatarView(id: contact.id.str, urlString: contact.photoUrl.str, size: 25)
-            Text(contact.name.str)
+            ContactAvatarView(contact, .thumbnil, .small)
+            HStack {
+                Text(contact.name)
+                Spacer()
+            }
+            .disabled(contact.isCurrentUser)
+            .tapToRoute(.chatView(contact.conId))
+            if contact.isCurrentUser {
+                Spacer()
+                Text("You")
+                    .font(.footnote)
+                    .foregroundStyle(.tertiary)
+            }
         }
-        .background(
-            Button(action: {
-                if contact.id != CurrentUser.id {
-                    ViewRouter.shared.routes.appendUnique(.chatView(conId: Con.fetchOrCreate(contact: contact).id.str))
-                }
-            }, label: {
-                Color.clear
-            })
-        )
     }
 }

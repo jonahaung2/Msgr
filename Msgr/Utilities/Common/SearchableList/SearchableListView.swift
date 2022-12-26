@@ -12,7 +12,6 @@ struct SearchableListView<Content>: View where Content: View {
     private let header: Content
     @State private var showGroup: Bool = false
     @StateObject private var viewModel: SearchableListViewModel
-    
 
     init(data: [ListCellData], showGroup: Bool = true, header: Content = EmptyView()) {
         self.header = header
@@ -22,7 +21,7 @@ struct SearchableListView<Content>: View where Content: View {
 
     var body: some View {
         List {
-            if viewModel.searchText.isWhitespace {
+            if viewModel.searchText.isEmpty {
                 header
                     .listRowSeparator(.hidden)
             }
@@ -50,7 +49,7 @@ struct SearchableListView<Content>: View where Content: View {
     }
     private var trailingItem: some View {
         Toggle(isOn: $showGroup) {
-            XIcon(.distribute_vertical_top)
+            XIcon(.person_fill)
         }
     }
 }

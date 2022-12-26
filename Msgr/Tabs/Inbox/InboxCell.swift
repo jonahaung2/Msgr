@@ -9,67 +9,41 @@ import SwiftUI
 
 struct InBoxCell: View {
 
-    let inboxCellViewModel: InboxCellViewModel
+    @EnvironmentObject private var model: InboxCellViewModel
 
     var body: some View {
         HStack {
-            AvatarView(id: inboxCellViewModel.id)
-                .frame(width: 50, height: 50)
 
-//            if let msg = con.lastMsg() {
-//                Text(msg.text.str)
-//                .lineLimit(3)
-//                .foregroundStyle(foregroundStyle(for: msg))
-//            }
-//            Group {
-//                switch con.conType {
-//                case .single(let contact):
-//                    AvatarView(id: contact?.id ?? "")
-//                case .group(_):
-//                    AvatarView(id: con.id.str)
-//                }
-//            }
-//            .frame(width: 50, height: 50)
-//
+            GroupAvatarView(conId: model.conId, urlString: model.photoURL, photoSize: .thumbnil, imageViewSize: .medium)
+            
             VStack(alignment: .leading, spacing: 2) {
                 HStack {
-                    Text(inboxCellViewModel.con.nameX)
-                        .font(.headline)
-                    +
-                    Text(" \(inboxCellViewModel.msgCount) ")
-                        .italic()
-                        .font(.caption2)
-                    Text(inboxCellViewModel.lastMsg.date?.toStringWithRelativeTime() ?? "" + " ")
-                        .font(.footnote)
+                    Text(model.title)
+                        .fontWeight(model.hasUnreadMsgs ? .bold : .semibold)
+
+                    if model.hasUnreadMsgs {
+                        Image(systemName: "\(model.unreadCount).circle.fill")
+                            .imageScale(.large)
+                            .foregroundColor(.accentColor)
+                    }
                 }
 
-                Group {
-                    Text(inboxCellViewModel.lastMsg.text.str)
-                    +
-                    Text(" ")
-                    +
-                    Text(inboxCellViewModel.lastMsg.deliveryStatus.description)
-                        .font(.caption)
+                Text(model.text)
+                    .lineLimit(3)
+                    .fontWeight(model.hasUnreadMsgs ? .semibold : .regular)
+
+
+                HStack {
+                    Text("\(Image(systemName: "person.fill")) \(model.senderName)")
+                    Spacer()
+                    Text("\(model.date.formatted(.relative(presentation: .named)))")
+                        .fontDesign(.serif)
                 }
-                .lineLimit(3)
-                .foregroundStyle(foregroundStyle(for: inboxCellViewModel.lastMsg))
+                .font(.footnote)
             }
+            .tapToRoute(.chatView(model.conId))
         }
-        .background(
-            Button(action: {
-                ViewRouter.shared.routes.appendUnique(.chatView(conId: inboxCellViewModel.con.id.str))
-            }, label: {
-                Color.clear
-            })
-        )
         .transition(.opacity)
-    }
-
-    private func foregroundStyle(for msg: Msg) -> some ShapeStyle {
-        if msg.recieptType == .Send {
-            return .secondary
-        }
-        return (msg.deliveryStatus == .Read ? .secondary : .primary)
     }
 }
 

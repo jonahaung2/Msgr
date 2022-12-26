@@ -20,11 +20,9 @@ final class SearchableListViewModel: ObservableObject {
         self.allItems = items
         self.items = items
         $searchText
-            .debounce(for: .seconds(0.1), scheduler: DispatchQueue.main)
+            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
             .sink { [weak self] text in
-                DispatchQueue.main.async {
-                    self?.searchItems(text)
-                }
+                self?.searchItems(text)
             }
             .store(in: &subscription)
     }

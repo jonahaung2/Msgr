@@ -17,19 +17,16 @@ struct ChatScrollView<Content: View>: View {
         ScrollViewReader { scroller in
             ScrollView(.vertical) {
                 content()
-                    .id(1)
                     .background(
-                        GeometryReader { proxy in
-                            let frame = proxy.frame(in: .named(scrollAreaId))
+                        GeometryReader {
                             Color.clear
-                                .preference(key: FramePreferenceKey.self, value: frame)
+                                .preference(key: FramePreferenceKey.self, value: $0.frame(in: .named(scrollAreaId)))
                         }
                     )
             }
-            .scrollContentBackground(.visible)
-            .scrollDismissesKeyboard(.immediately)
             .coordinateSpace(name: scrollAreaId)
             .flippedUpsideDown()
+            .scrollDismissesKeyboard(.immediately)
             .onPreferenceChange(FramePreferenceKey.self) { frame in
                 if let frame {
                     DispatchQueue.main.async {
@@ -37,15 +34,9 @@ struct ChatScrollView<Content: View>: View {
                     }
                 }
             }
-            .onChange(of: viewModel.scrollItem) { newValue in
-                if let newValue {
-                    defer {
-                        self.viewModel.scrollItem = nil
-                    }
-                    scroller.scroll(to: newValue)
-                }
+            .onChange(of: viewModel.scrollItem) {
+                scroller.scroll(to: $0)
             }
-
         }
     }
 }

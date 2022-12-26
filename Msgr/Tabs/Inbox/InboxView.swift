@@ -14,16 +14,27 @@ struct InboxView: View {
     var body: some View {
         List {
             ForEach(viewModel.items) { item in
-                InBoxCell(inboxCellViewModel: item)
+                InBoxCell()
+                    .environmentObject(item)
             }
-            .onDelete(perform: deleteItems)
-        }.onAppear {
-            viewModel.refreshView()
+            .onDelete(perform: viewModel.deleteItems(offsets:))
         }
+        .animation(.default, value: viewModel.items)
+        .listStyle(.inset)
+        .navigationBarItems(trailing: trailingItems)
+        .searchable(text: .constant(""))
+        .refreshable {
+            viewModel.objectWillChange.send()
+        }
+        .task {
+            viewModel.onAppear()
+        }
+        .onDisappear(perform: viewModel.onDisappear)
     }
 
-    private func deleteItems(offsets: IndexSet) {
-        offsets.map { viewModel.items[$0].con }.forEach(CoreDataStack.shared.viewContext.delete)
-        viewModel.refreshView()
+    private var trailingItems: some View {
+        HStack {
+            EditButton()
+        }
     }
 }

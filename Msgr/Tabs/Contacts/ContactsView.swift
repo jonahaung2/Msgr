@@ -6,57 +6,80 @@
 //
 
 import SwiftUI
+import FirebaseFirestore
+import FirebaseFirestoreSwift
 
 struct ContactsView: View {
-    
-    @StateObject private var manager = ContactManager()
 
+//    @FirestoreQuery(
+//        collectionPath: "groups",
+//        predicates: [
+//            .where("members", arrayContainsAny: [CurrentUser.shared.id])
+//        ]
+//    ) private var groups: [GroupInfo.Payload]
+
+    @StateObject private var viewModel = ContactsViewModel()
+    @EnvironmentObject private var viewRouter: NavigationRouter
+    
     var body: some View {
         List {
-            if manager.searchText.isWhitespace {
-                Section {
-                    Label("Create Contact", systemImage: XIcon.Icon.person_crop_circle.systemName)
-                    Label("Create Group", systemImage: XIcon.Icon.plus_circle_fill.systemName)
-                        .tapToPresent(CreateGroupContactPickerView())
-                }
-            }
-            if !manager.displayGroups.isEmpty {
-                Section {
-                    ForEach(manager.displayGroups) { group in
-                        Text(group.name.str)
-                            .badge((group.members_?.count.description ?? "0") + " members")
-                            .tapToPush(ChatView(_con: group))
-                    }
-                }
-            }
             Section {
-                ForEach(manager.displayContacts) { contact in
-                    ContactCell(contact: contact)
+                Label("Create Group", systemImage: XIcon.Icon.person_2_circle.systemName)
+                    .tapToPresent(CreateGroupContactPickerView())
+            }
+
+//            Section {
+//                ForEach(groups) { group in
+//                    Text(group.name)
+//                        .xBadged(group.members.count.description + " members")
+//                        .backgroundTapped {
+//                            if !GroupInfo.hasSaved(for: group.id) {
+//                                CoreDataStore.shared.save(groupInfo: group)
+//                            }
+//                            viewRouter.routes.appendUnique(.chatView(group.id))
+//                        }
+//                }
+//                .onDelete { indexSet in
+//                    let items = indexSet.compactMap{ groups[safe: $0] }
+//                    items.forEach { each in
+//                        FirestoreRepo.remove(each, to: Firestore.firestore().collection("groups"))
+//                    }
+//                }
+//            }
+
+            Section {
+                ForEach(viewModel.groupInfos) { group in
+                    Text(group.name)
+                        .xBadged(group.members_.count.description + " members")
+                        .xBadged(group.admins_.count.description)
+                        .backgroundTapped {
+                            viewRouter.routes.appendUnique(.chatView(group.id))
+                        }
                 }
-                .onDelete(perform: removeContact(at:))
+                .onDelete { indexSet in
+                    let ids = indexSet.compactMap{ viewModel.groupInfos[safe: $0]?.objectID }
+                    CoreDataStore.shared.deleteObjects(ids)
+                }
+            }
+
+            Section {
+                ForEach(viewModel.contacts) {
+                    ContactCell(contact: $0)
+                        .disabled($0.isCurrentUser)
+                }
+                .onDelete(perform: viewModel.removeContact(at:))
             }
         }
-        .navigationTitle("Contacts")
         .navigationBarItems(trailing: trailingItem)
-        .searchable(text: $manager.searchText)
-    }
-
-    private func removeContact(at offsets: IndexSet) {
-        for index in offsets {
-            let item = manager.displayContacts[index]
-            CoreDataStack.shared.viewContext.delete(item)
-            CoreDataStack.shared.save()
-            manager.refresh()
-        }
     }
 
     private var trailingItem: some View {
         HStack {
             Button("Delete All") {
-                manager.deleteAll()
+                viewModel.deleteAll()
             }
-            Button("Sync Contacts") {
-                manager.sync()
+            Button("Sync") {
+                MsgrApp.sync()
             }
             EditButton()
         }

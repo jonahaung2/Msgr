@@ -460,7 +460,6 @@ public extension Date {
     // MARK: Formatter
 
     private class ConcurrentFormatterCache {
-
         private static let cachedISODateFormattersQueue = DispatchQueue(
             label: "iso-date-formatter-queue",
             attributes: .concurrent

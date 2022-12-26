@@ -8,6 +8,8 @@
 import SwiftUI
 import LocalAuthentication
 import FirebaseAuth
+import FirebaseAuthCombineSwift
+import Combine
 
 class Authenticator: ObservableObject {
 
@@ -17,20 +19,32 @@ class Authenticator: ObservableObject {
     @Published var isUnlocked = false
     @Published var error: String?
 
-    @Published var isLoggedIn: Bool = false
-
-    func observe() {
-        isLoggedIn = Auth.auth().currentUser != nil
+    @Published var isLoggedIn = Auth.auth().currentUser != nil
+    private var cancellables = Set<AnyCancellable>()
+    
+    init() {
+        Auth.auth()
+            .authStateDidChangePublisher()
+            .receive(on: RunLoop.main)
+            .sink {[weak self] user in
+                guard let self else { return }
+                self.isLoggedIn = user != nil
+                if let user {
+                    CurrentUser.shared.observe(user: user)
+                } else {
+                    CurrentUser.shared.unObserve()
+                }
+            }
+            .store(in: &cancellables)
     }
 
     func signOut() {
+        CurrentUser.shared.unObserve()
         do {
             try Auth.auth().signOut()
-            isLoggedIn = false
         } catch {
-            print(error)
+            Log(error)
         }
-        objectWillChange.send()
     }
 
     func authenticate() {

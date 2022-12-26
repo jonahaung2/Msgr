@@ -12,8 +12,10 @@ struct ChatTopBar: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var viewModel: ChatViewModel
 
+    private let padding = 7.0
+
     var body: some View {
-        VStack {
+        VStack(spacing: 0) {
             HStack(alignment: .top) {
                 Button {
                     dismiss()
@@ -21,44 +23,40 @@ struct ChatTopBar: View {
                     Image(systemName: "chevron.left")
                         .bold()
                         .imageScale(.large)
-                        .padding(.horizontal)
-                        .padding(.bottom, 5)
+                        .padding(padding)
                 }
 
                 Spacer()
 
                 VStack(spacing: 0) {
-                    Text(viewModel.con.nameX)
+                    Text(viewModel.conversation.kind.title)
                         .font(.subheadline)
-                        .foregroundColor(.primary)
-                        .tapToPush(ConInfoView().environmentObject(viewModel))
+                        .bold()
+                    Text(viewModel.conversation.typingText ?? viewModel.conversation.kind.subtitle)
+                        .font(.caption)
+                        .fontWeight(.medium)
                 }
+                .tapToRoute(.conInfo(viewModel.conversation.con.id))
 
                 Spacer()
 
                 Button {
-
-                } label: {
-                    Image(systemName: "phone.fill")
-                        .imageScale(.large)
-                        .padding(.bottom, 5)
-                }
-                Button {
-                    viewModel.isTyping.toggle()
-                } label: {
-                    Image(systemName: "video.fill")
-                        .imageScale(.large)
-                        .padding(.bottom, 5)
-                }
-                Button {
-                    viewModel.simulateDemoMsg()
+                    simulateDemoMsg()
                 } label: {
                     Image(systemName: "tuningfork")
                         .imageScale(.large)
-                        .padding(.trailing)
-                        .padding(.bottom, 5)
+                        .padding(padding)
                 }
             }
+            .padding(.horizontal, padding)
         }
+        .background(.thickMaterial)
+    }
+
+    private func simulateDemoMsg() {
+        let con = viewModel.conversation.con
+        let contact = con.members.filter{ $0.id != CurrentUser.shared.id }.random()!
+        let payload = Msg.Payload(id: UUID().uuidString, content: .Text(text: Lorem.random), date: .now, conID: con.id, senderID: contact.id)
+        CoreDataStore.shared.save(msgPL: payload)
     }
 }

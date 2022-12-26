@@ -8,46 +8,82 @@
 import SwiftUI
 
 struct ChatView: View {
-
-    @EnvironmentObject private var viewRouter: ViewRouter
-    @EnvironmentObject private var pushNotificationManager: PushNotificationManager
+    
     @StateObject private var viewModel: ChatViewModel
 
-    init(_con: Con) {
-        _viewModel = .init(wrappedValue: .init(_con: _con))
+    init(_ conID: String) {
+        _viewModel = .init(wrappedValue: .init(conID))
     }
 
-    init(_contact: Contact) {
-        self.init(_con: _contact.con())
-    }
-    
     var body: some View {
-        VStack(spacing: 0) {
-            ChatTopBar()
-            ChatScrollView {
-                LazyVStack(spacing: viewModel.con.cellSpacing.cgFloat) {
-                    ForEach(viewModel.datasource.enuMsgs.lazy, id: \.element) { i, msg in
-                      LazyView(MsgCell(style: viewModel.msgStyle(for: msg, at: i, selectedId: viewModel.selectedId))
-                        .environmentObject(msg))
+        ZStack {
+            background
+            VStack(spacing: 0) {
+                ChatTopBar()
+                ZStack {
+                    ChatScrollView {
+                        VStack(spacing: 0) {
+                            Spacer(minLength: 2).id(1)
+                            LazyVStack(spacing: viewModel.conversation.con.cellSpacing.cgFloat) {
+                                ForEach(viewModel.datasource.blocks.lazy, id: \.msg) {  prev, msg, next in
+                                    let style = viewModel.msgStyle(prev: next, msg: msg, next: prev)
+                                    MsgCell(style: style)
+                                        .environmentObject(msg)
+                                }
+                            }
+                            .animation(.easeOut(duration: 0.2), value: viewModel.datasource.allMsgsCount)
+                            .animation(.interactiveSpring(), value: viewModel.selectedMsg)
+                        }
+                    }
+
+                    VStack {
+                        Spacer()
+                        HStack {
+                            Spacer()
+                            ScrollDownButton()
+                        }
                     }
                 }
+                ChatInputBar()
             }
-            .overlay(ScrollDownButton(), alignment: .bottomTrailing)
+            .coordinateSpace(name: "chatView")
 
-            ChatInputBar()
+            markedMsgOverlayView
         }
-        .background(ChatBackground())
-        .accentColor(viewModel.con.themeColor.color)
         .environmentObject(viewModel)
         .navigationBarHidden(true)
+        .statusBarHidden(viewModel.markedMsgDisplayInfo != nil)
         .task {
-            viewRouter.tabBarVisibility = .hidden
+            TabRouter.shared.tabBarVisibility = .hidden
+            viewModel.task()
         }
         .onAppear {
-            pushNotificationManager.currentConId = viewModel.con.id
+            PushNotiHandler.shared.currentConId = viewModel.conversation.con.id
         }
         .onDisappear {
-            pushNotificationManager.currentConId = nil
+            PushNotiHandler.shared.currentConId = nil
+        }
+    }
+
+    @ViewBuilder
+    private var background: some View {
+        viewModel.conversation.con.bgImage.image
+            .edgesIgnoringSafeArea(.all)
+    }
+
+    @ViewBuilder
+    private var markedMsgOverlayView: some View {
+        if let msgDisplayInfo = viewModel.markedMsgDisplayInfo {
+            Group {
+                background
+                    .opacity(0.7)
+                    .transition(.opacity.animation(.easeOut(duration: 0.3)))
+                    .onTapGesture {
+                        viewModel.setMarkedMsg(nil)
+                    }
+
+                MarkedMsgOverlayView(msgDisplayInfo: msgDisplayInfo)
+            }
         }
     }
 }

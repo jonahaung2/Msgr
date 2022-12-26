@@ -5,17 +5,11 @@
 //  Created by Aung Ko Min on 26/8/22.
 //
 
-import SwiftUI
+import Foundation
 
 struct ListCellData: Hashable, Identifiable {
-
-    var id: String { title }
+    let id = UUID().uuidString
     let title: String
-    var subTitle: String? = nil
-    var icon: XIcon.Icon? = nil
-  
-
-    static func == (lhs: ListCellData, rhs: ListCellData) -> Bool {
-        return lhs.title == rhs.title && lhs.subTitle == rhs.subTitle
-    }
+    let subTitle: String?
+    let icon: XIcon.Icon?
 }

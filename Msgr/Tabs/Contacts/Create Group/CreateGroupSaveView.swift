@@ -6,10 +6,12 @@
 //
 
 import SwiftUI
+import Firebase
+import FirebaseFirestoreSwift
 
 struct CreateGroupSaveView: View {
     let contacts: [Contact]
-    @Environment(\.presentationMode) var presentationMode
+    @Environment(\.dismiss) var dismiss
     @State private var name = ""
     var body: some View {
         List {
@@ -19,28 +21,44 @@ struct CreateGroupSaveView: View {
             Section("Members") {
                 ForEach(contacts) { contact in
                     HStack {
-                        ContactAvatarView(id: contact.id.str, urlString: contact.photoUrl.str, size: 25)
-                        Text(contact.name.str)
+                        ContactAvatarView(contact, .thumbnil, .small)
+                        Text(contact.name)
                     }
                 }
             }
         }
-        .navigationBarItems(trailing: saveButton)
+        .navigationBarItems(leading: CancelButton(isProtected: true), trailing: saveButton)
     }
 
     private var saveButton: some View {
         Button {
-            let con = Con(context: CoreDataStack.shared.viewContext)
-            con.id = UUID().uuidString
-            con.name = name
-            con.date = Date()
-            con.photoUrl = contacts.first?.photoUrl
-            con.members_ = contacts.map{ $0.id.str }
-            CoreDataStack.shared.save()
-            presentationMode.wrappedValue.dismiss()
+            saveAndExti()
         } label: {
             Text("Save")
-        }.disabled(name.isWhitespace)
+        }
+        .disabled(name.isWhitespace)
+    }
+
+    private func saveAndExti() {
+        let currentUserId = CurrentUser.shared.id
+
+        var members = contacts.compactMap{ $0.id }
+        members.appendUnique(currentUserId)
+
+        let payload = GroupInfo.Payload(id: UUID().uuidString, name: name, photoUrl: "", created: Date.now.timeIntervalSince1970, createdBy: currentUserId, members: members, admins: [currentUserId])
+
+        Task {
+            do {
+                try await Firestore.firestore().collection("groups").document(payload.id).setData(payload.dictionary!)
+                CoreDataStore.shared.save(groupInfo: payload)
+                await MainActor.run {
+                    self.dismiss()
+                }
+            } catch {
+                Log(error)
+            }
+
+        }
 
     }
 }

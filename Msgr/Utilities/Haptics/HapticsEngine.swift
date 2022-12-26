@@ -31,10 +31,9 @@ class HapticsEngine {
                guard let path = Bundle.main.url(forResource: "Success", withExtension: "ahap") else {
                     return
                 }
-                print(path)
                 try engine?.playPattern(from: path)
             } catch let error {
-               print(error)
+                Log(error)
             }
         } else {
             AudioServicesPlaySystemSound(SystemSoundID(1520))
@@ -50,7 +49,7 @@ class HapticsEngine {
                 
                 try engine?.playPattern(from: URL(fileURLWithPath: path))
             } catch let error {
-               print(error)
+                Log(error)
             }
         } else {
             AudioServicesPlaySystemSound(SystemSoundID(1102))
@@ -79,7 +78,7 @@ class HapticsEngine {
                 let player = try engine?.makePlayer(with: pattern)
                 try player?.start(atTime: CHHapticTimeImmediate) // Play now.
             } catch let error {
-               print(error)
+                Log(error)
             }
         } else {
             AudioServicesPlaySystemSound(SystemSoundID(1519))
@@ -93,7 +92,7 @@ class HapticsEngine {
         
         engine?.stop(completionHandler: {[weak self] error in
             if let error = error {
-               print(error)
+                Log(error)
                 return
             }
             self?.engineNeedsStart = true
@@ -107,7 +106,7 @@ class HapticsEngine {
         
         engine?.start(completionHandler: {[weak self] error in
             if let error = error {
-               print(error)
+                Log(error)
                 return
             }
             self?.engineNeedsStart = false
@@ -136,11 +135,11 @@ class HapticsEngine {
                     self?.engineNeedsStart = false
                     
                 } catch {
-                   print(error)
+                    Log(error)
                 }
             }
         } catch {
-            print(error)
+            Log(error)
         }
     }
 }

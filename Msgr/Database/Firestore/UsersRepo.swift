@@ -12,7 +12,6 @@ import FirebaseFirestoreSwift
 
 class UsersRepo {
 
-    static let shared = UsersRepo()
     let reference = Firestore.firestore().collection("users")
 
     func add(_ item: Contact.Payload, completion: ((Error?) -> Void)? = nil) {
@@ -69,7 +68,6 @@ class UsersRepo {
         return await FirestoreRepo.fetch(query: query)
     }
 }
-
 
 extension Contact.Payload {
 

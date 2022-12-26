@@ -68,49 +68,24 @@ final class SignInViewModel: ObservableObject {
             if let error {
                 self.errorText = error.localizedDescription
             } else if let result {
-                print(result)
-                let user = result.user
-                self.updateUserToFirestore(user: user)
-//                Authenticator.shared.isLoggedIn = true
+                Log(result)
             }
         }
     }
 
-    private func updateUserToFirestore(user: User) {
-        let contact = Contact.Payload(id: user.uid, name: "Aung Ko Min", phone: user.phoneNumber.str, photoURL: "http://www.goodmorningimagesdownload.com/wp-content/uploads/2020/11/Facebook-Profile-Images-65.jpg", pushToken: CurrentUser.pushToken.str)
-        
-        if let dic = contact.dictionary {
-            Firestore.firestore().collection("users").document(contact.id).setData(dic, merge: true) { error in
-                if let error {
-                    self.errorText = error.localizedDescription
-                } else {
-                    Authenticator.shared.isLoggedIn = true
-                }
-            }
-        }
-    }
+    
     func emailLogin() {
         let email = "jonahaung@gmail.com"
         let password = "111111"
         isLoading = true
-        
         Auth.auth().signIn(withEmail: email, password: password) { result, error  in
             self.isLoading = false
             if let error {
                 self.errorText = error.localizedDescription
             } else if let result {
                 let user = result.user
-                let payload = Contact.Payload(id: user.uid, name: "Jonah Aung", phone: "+6598765432", photoURL: "http://www.goodmorningimagesdownload.com/wp-content/uploads/2020/11/Facebook-Profile-Images-65.jpg", pushToken: CurrentUser.pushToken.str)
-
-                if let dic = payload.dictionary {
-                    Firestore.firestore().collection("users").document(payload.id).setData(dic, merge: true) { error in
-                        if let error {
-                            self.errorText = error.localizedDescription
-                        } else {
-                            Authenticator.shared.isLoggedIn = true
-                        }
-                    }
-                }
+                let payload = Contact.Payload(id: user.uid, name: "Jonah Aung", phone: "+6598765432", photoURL: "https://media-exp1.licdn.com/dms/image/C5603AQEmuML1GXI9DQ/profile-displayphoto-shrink_800_800/0/1630504470059?e=1672272000&v=beta&t=lAsZRcQIW79CdEN3Fps8WTRGuotjMBN8c1PSttvOsWo", pushToken: CurrentUser.shared.pushToken.str)
+                CurrentUser.shared.payload = payload
             }
         }
     }

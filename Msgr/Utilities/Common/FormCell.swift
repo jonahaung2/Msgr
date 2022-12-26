@@ -25,18 +25,17 @@ struct FormCell<Content: View>: View {
     }
 }
 
-struct FormCell2<Content: SwiftUI.View>: View {
+struct FormCell2<Left: View, Right: View>: View {
     
-    @ViewBuilder var left: () -> Content
-    @ViewBuilder var right: () -> Content
+    @ViewBuilder var left: () -> Left
+    @ViewBuilder var right: () -> Right
     
-    @ViewBuilder
     var body: some View {
         HStack {
             left()
+                .foregroundStyle(.secondary)
             Spacer()
             right()
-                .foregroundStyle(.secondary)
         }
     }
 }

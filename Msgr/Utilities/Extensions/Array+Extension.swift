@@ -11,44 +11,48 @@
 
 import Foundation
 
-//-----------------------------------------------------------------------------------------------------------------------------------------------
 extension Array where Element: Hashable {
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
 	mutating func appendUnique(_ element: Element) {
-
-		var array = self
-
-		if !array.contains(element) {
-			array.append(element)
+		if !self.contains(element) {
+            self.append(element)
 		}
-
-		self = array
 	}
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
 	mutating func removeDuplicates() {
-
 		var array: [Element] = []
-
-		for element in self {
-			if !array.contains(element) {
-				array.append(element)
-			}
-		}
-
+        self.forEach { each in
+            if !array.contains(each) {
+                array.append(each)
+            }
+        }
 		self = array
 	}
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
 	mutating func remove(_ element: Element) {
-
-		var array = self
-
-		while let index = array.firstIndex(of: element) {
-			array.remove(at: index)
+		while let index = self.firstIndex(of: element) {
+			self.remove(at: index)
 		}
-
-		self = array
 	}
+}
+
+// So that we can save [Route] in the UserDefault
+extension Array: RawRepresentable where Element: Codable {
+    public init?(rawValue: String) {
+        guard let data = rawValue.data(using: .utf8),
+              let result = try? JSONDecoder().decode([Element].self, from: data)
+        else {
+            return nil
+        }
+        self = result
+    }
+
+    public var rawValue: String {
+        guard let data = try? JSONEncoder().encode(self),
+              let result = String(data: data, encoding: .utf8)
+        else {
+            return "[]"
+        }
+        return result
+    }
 }

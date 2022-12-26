@@ -24,7 +24,6 @@ final class UserDefaultManager: ObservableObject {
     let TappedConId = "TappedConId"
 
     @AppStorage("pageSize") var isLoggedIn = false
-//    @AppStorage("pushToken") var pushNotificationToken: String?
     @AppStorage("authVerificationID") var authVerificationID: String?
     @AppStorage("TappedConId") var tappedConId: String?
 

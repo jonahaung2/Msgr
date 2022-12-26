@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="21512" systemVersion="22A400" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="Con" representedClassName="Con" syncable="YES">
+        <attribute name="bgImage_" attributeType="Integer 16" defaultValueString="4" usesScalarValueType="YES"/>
+        <attribute name="bubbleCornorRadius" attributeType="Integer 16" defaultValueString="17" usesScalarValueType="YES"/>
+        <attribute name="cellSpacing" attributeType="Integer 16" defaultValueString="3" usesScalarValueType="YES"/>
+        <attribute name="id" optional="YES" attributeType="String"/>
+        <attribute name="isGroup" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="oneToOneID" optional="YES" attributeType="String"/>
+        <attribute name="themeColor_" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="lastMsg" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Msg" inverseName="lastCon" inverseEntity="Msg"/>
+        <relationship name="msgs" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Msg" inverseName="con" inverseEntity="Msg"/>
+    </entity>
+    <entity name="Contact" representedClassName="Contact" syncable="YES">
+        <attribute name="id" attributeType="String"/>
+        <attribute name="lastSeen" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="name" attributeType="String"/>
+        <attribute name="phoneNumber" attributeType="String"/>
+        <attribute name="photoUrl" optional="YES" attributeType="String"/>
+        <attribute name="pushToken" optional="YES" attributeType="String"/>
+        <relationship name="msgs" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Msg" inverseName="sender" inverseEntity="Msg"/>
+    </entity>
+    <entity name="GroupInfo" representedClassName="GroupInfo" syncable="YES">
+        <attribute name="adminsArray" optional="YES" attributeType="String"/>
+        <attribute name="created" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="createdByID" optional="YES" attributeType="String"/>
+        <attribute name="id" attributeType="String"/>
+        <attribute name="membersArray" optional="YES" attributeType="String"/>
+        <attribute name="name" attributeType="String"/>
+        <attribute name="photoUrl" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="Msg" representedClassName="Msg" syncable="YES">
+        <attribute name="conId" attributeType="String"/>
+        <attribute name="date" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="deliveryStatus_" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="id" attributeType="String"/>
+        <attribute name="isGroup" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="isSender" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
+        <attribute name="msgType_" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="progress" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="senderId" attributeType="String"/>
+        <attribute name="text" optional="YES" attributeType="String"/>
+        <relationship name="con" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Con" inverseName="msgs" inverseEntity="Con"/>
+        <relationship name="lastCon" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Con" inverseName="lastMsg" inverseEntity="Con"/>
+        <relationship name="sender" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Contact" inverseName="msgs" inverseEntity="Contact"/>
+    </entity>
+</model>

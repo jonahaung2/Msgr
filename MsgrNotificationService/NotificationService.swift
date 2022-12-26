@@ -7,117 +7,79 @@
 
 import UserNotifications
 import Firebase
-import FirebaseFirestore
-import FirebaseFirestoreSwift
 
+enum NotificationServieError: Error {
+    case NoMsgNoti, Other
+}
 class NotificationService: UNNotificationServiceExtension {
 
-    var contentHandler: ((UNNotificationContent) -> Void)?
-    var bestAttemptContent: UNMutableNotificationContent?
-    private let coreStorage = CoreDataStore.shared
+    private var contentHandler: ((UNNotificationContent) -> Void)?
+    private var bestAttemptContent: UNMutableNotificationContent?
 
     override init() {
         super.init()
         FirebaseApp.configure()
     }
 
-    override func didReceive(_ request: UNNotificationRequest, withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void) {
 
+    override func didReceive(_ request: UNNotificationRequest, withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void) {
+        
         self.contentHandler = contentHandler
         bestAttemptContent = request.content.mutableCopy() as? UNMutableNotificationContent
         guard let bestAttemptContent else { return }
-
-        if let msgPL = Msg.Payload.msgPayload(from: bestAttemptContent.userInfo) {
-            let senderId = msgPL.senderId
-            let conId = msgPL.conId
-
-            if contactHasSaved(for: senderId) {
-                if conHasSaved(for: conId) {
-                    saveMsgAndReturn()
-                } else {
-                    // Download Con
-                }
-            } else {
-                fetchContact(id: senderId) {[weak self] contactPL in
-                    guard let self = self else { return }
-                    if let contactPL {
-                        self.coreStorage.insert(payload: contactPL)
-                    }
-                    if self.conHasSaved(for: conId) {
-                        saveMsgAndReturn()
-                    } else {
-                        // Download Con
-                    }
-                }
-            }
-
-            func saveMsgAndReturn() {
-                coreStorage.insert(payload: msgPL, informSavedNotification: false)
-                contentHandler(bestAttemptContent)
-            }
-        } else {
-//            self.downloadImageFrom(url: "https://media-exp1.licdn.com/dms/image/C5603AQEmuML1GXI9DQ/profile-displayphoto-shrink_800_800/0/1630504470059?e=1672272000&v=beta&t=lAsZRcQIW79CdEN3Fps8WTRGuotjMBN8c1PSttvOsWo") { attachment in
-//                if let attachment = attachment {
-//                    bestAttemptContent.attachments = [attachment]
-//                }
-//                contentHandler(bestAttemptContent)
-//            }
-        }
-    }
-
-    override func serviceExtensionTimeWillExpire() {
-        if let contentHandler = contentHandler, let bestAttemptContent =  bestAttemptContent {
-            if let msgPayload = Msg.Payload.msgPayload(from: bestAttemptContent.userInfo) {
-                bestAttemptContent.categoryIdentifier = msgPayload.conId
-                coreStorage.insert(payload: msgPayload, informSavedNotification: false)
-            }
+        handel(userInfo: bestAttemptContent.userInfo) {
             contentHandler(bestAttemptContent)
         }
     }
 
+
+    override func serviceExtensionTimeWillExpire() {
+        if let contentHandler = contentHandler, let bestAttemptContent =  bestAttemptContent {
+            contentHandler(bestAttemptContent)
+        }
+    }
+
+    private func handel(userInfo: [AnyHashable: Any], _ completion: @escaping () -> Void) {
+        guard let noti = AnyNoti.noti(from: userInfo) else {
+            completion()
+            return
+        }
+        switch noti.notiType {
+        case .msg(let type):
+            switch type {
+            case .newMsg(let payload):
+                handleMsg(payload, completion)
+            case .reaction(let reaction):
+                Log(reaction)
+                completion()
+            }
+        case .conNoti(let type):
+            switch type {
+            case .typing(let by):
+                Log(by)
+                completion()
+            }
+        }
+    }
+
+    private func handleMsg(_ payload: Msg.Payload, _ completion: @escaping () -> Void) {
+        if !Contact.hasSaved(for: payload.senderID) {
+            Contact.fetchRemotePayload(id: payload.senderID) { senderPL in
+                if let senderPL {
+                    CoreDataStore.shared.save(contact: senderPL)
+                }
+                CoreDataStore.shared.save(msgPL: payload)
+                completion()
+            }
+        } else {
+            CoreDataStore.shared.save(msgPL: payload)
+            completion()
+        }
+    }
 }
 
 extension NotificationService {
 
-    private func fetchContact(id: String, completion: @escaping (Contact.Payload?) -> Void) {
-        Firestore.firestore().collection("users").document(id).getDocument { snap, _ in
-            let payload = try? snap?.data(as: Contact.Payload.self)
-            completion(payload)
-        }
-    }
-
-    private func contactHasSaved(for id: String) -> Bool {
-        let context = CoreDataStack.shared.viewContext
-        let request = Contact.fetchRequest()
-        request.resultType = .countResultType
-        request.fetchLimit = 1
-        request.predicate = .init(format: "id == %@", id)
-        do {
-            let count = try context.count(for: request)
-            return count > 0
-        } catch {
-            print(error.localizedDescription)
-            return false
-        }
-    }
-
-    private func conHasSaved(for id: String) -> Bool {
-        let context = CoreDataStack.shared.viewContext
-        let request = Con.fetchRequest()
-        request.resultType = .countResultType
-        request.fetchLimit = 1
-        request.predicate = .init(format: "id == %@", id)
-        do {
-            let count = try context.count(for: request)
-            return count > 0
-        } catch {
-            print(error.localizedDescription)
-            return false
-        }
-    }
-}
-
-extension NotificationService {
     private func downloadImageFrom(url: String, handler: @escaping (UNNotificationAttachment?) -> Void) {
         let task = URLSession.shared.downloadTask(with: URL(string: url)!) { downloadedUrl, response, error in
             guard let downloadedUrl = downloadedUrl else {
@@ -133,7 +95,7 @@ extension NotificationService {
                 let attachment = try UNNotificationAttachment(identifier: "picture", url: urlPath, options: nil)
                 handler(attachment)
             } catch {
-                print("attachment error")
+                Log("attachment error")
                 handler(nil)
             }
         }

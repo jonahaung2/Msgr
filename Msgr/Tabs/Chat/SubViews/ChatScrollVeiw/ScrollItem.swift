@@ -8,7 +8,8 @@
 import SwiftUI
 
 struct ScrollItem: Equatable {
-    let id: AnyHashable
+    let id = UUID()
+    let viewId: AnyHashable
     let anchor: UnitPoint
     var animate: Bool = false
 }

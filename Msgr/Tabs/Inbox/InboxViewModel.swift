@@ -10,34 +10,45 @@ import Combine
 
 final class InboxViewModel: ObservableObject {
 
-    @Published var items = [InboxCellViewModel]()
+    var items = [InboxCellViewModel]()
+
+    private let fetcher: CoreDataFetcher<Msg> = .init(predicate: ("lastCon", "!=", "NULL"), sortDescriptor: ("date", false))
 
     private var cancellables = Set<AnyCancellable>()
+    private var isViewVisiable = true
     init() {
-        NotificationCenter
-            .default
-            .publisher(for: .MsgNoti)
-            .receive(on: RunLoop.main)
-            .sink { [weak self] _ in
+        fetcher.$items
+            .removeDuplicates()
+            .debounce(for: 0.3, scheduler: RunLoop.main)
+            .compactMap({ msgs in
+                return msgs.compactMap{ InboxCellViewModel(msg: $0)}
+            })
+            .sink { [weak self] items in
                 guard let self = self else { return }
-                self.refreshView()
+                self.items = items
+                if self.isViewVisiable {
+                    self.objectWillChange.send()
+                }
             }
             .store(in: &cancellables)
-        
     }
 
-    func refreshView() {
-        let cons = Con.cons()
-        var items = [InboxCellViewModel]()
-        cons.forEach { con in
-            if let lastMsg = con.lastMsg() {
-                let item = InboxCellViewModel(con: con, lastMsg: lastMsg)
-                items.append(item)
+    func deleteItems(offsets: IndexSet) {
+        offsets.forEach { i in
+            if let item = items[safe: i] {
+                if let con = Con.object(for: item.conId, Persistance.shared.viewContext) {
+                    CoreDataStore.shared.deleteObjects([con.objectID])
+                }
+
             }
         }
-        let sorted = items.sorted{ $0.lastMsg.date ?? .now > $1.lastMsg.date ?? .now}
-        if self.items != sorted {
-            self.items = sorted
-        }
+    }
+
+    func onAppear() {
+        isViewVisiable = true
+        objectWillChange.send()
+    }
+    func onDisappear() {
+        isViewVisiable = false
     }
 }

@@ -14,15 +14,14 @@ struct SettingsView: View {
     @AppStorage(UserDefaultManager.shared.List_Style) private var listStyle = XListStyle.Default
     @AppStorage(UserDefaultManager.shared.UseFaceID) private var useFaceID = true
     @AppStorage(UserDefaultManager.shared.SaveLastVisitedPage) private var saveLastVisitedPage = true
+    @EnvironmentObject private var currentUser: CurrentUser
 
     var body: some View {
         Form {
             Section("User Profile") {
                 HStack {
                     Spacer()
-                    CachedAsyncImage(url: MockData.userProfilePhotoURL)
-                        .frame(width: 150, height: 150)
-                        .clipShape(Circle())
+                    ContactAvatarView(currentUser.payload, .original, .custom(150))
                     Spacer()
                 }
                 .padding()
@@ -30,18 +29,27 @@ struct SettingsView: View {
 
             Section {
                 FormCell2 {
-                    Text("Phone Number")
-                } right: {
-                    Text(CurrentUser.phone)
-                }
-                .tapToPush(Text("Edit Staff ID"))
-
-                FormCell2 {
                     Text("Name")
                 } right: {
-                    Text(CurrentUser.name)
+                    TextField("Name", text: $currentUser.payload.name)
+                        .onSubmit {
+                            currentUser.update()
+                        }
+                }
+                FormCell2 {
+                    Text("Phone Number")
+                } right: {
+                    Text(currentUser.payload.phone)
+                }
 
-                }.tapToPush(Text("Edit User Name"))
+                FormCell2 {
+                    Text("Photo URL")
+                } right: {
+                    TextField("URL", text: $currentUser.payload.photoURL ?? .constant(""))
+                        .onSubmit {
+                            currentUser.update()
+                        }
+                }
             }
 
             Section {
@@ -54,7 +62,6 @@ struct SettingsView: View {
             }
 
             Section("Appearancee") {
-
                 Toggle(isOn: $isDarkMode) {
                     Text("Dark Mode")
                 }
@@ -85,6 +92,25 @@ struct SettingsView: View {
 
             }
 
+            Section("System") {
+                FormCell2 {
+                    Text("Total Media Size")
+                } right: {
+                    Text(LocalMedia.total().description)
+                }
+                FormCell2 {
+                    Text("Total Free Space")
+                } right: {
+                    Text(File.diskFree().description)
+                }
+
+                ConfirmButton(title: "Clean Up Files", action: {
+                    LocalMedia.cleanupManual(logout: true)
+                }, label: {
+                    Text("Clean Up Media")
+                })
+            }
+
             Section("Support") {
                 Text("End User License")
                     .tapToPush(Text("End User Licens"))
@@ -99,6 +125,14 @@ struct SettingsView: View {
             }
 
             Section {
+                Button {
+                    CoreDataStore.shared.deleteAllRecords(entity: "Con")
+                    CoreDataStore.shared.deleteAllRecords(entity: "Contact")
+                    CoreDataStore.shared.deleteAllRecords(entity: "GroupInfo")
+                    CoreDataStore.shared.deleteAllRecords(entity: "Msg")
+                } label: {
+                    Text("Reset All Data")
+                }
 
             } header: {
 

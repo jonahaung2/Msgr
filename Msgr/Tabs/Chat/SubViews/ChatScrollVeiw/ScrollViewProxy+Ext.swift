@@ -11,10 +11,10 @@ extension ScrollViewProxy {
     func scroll(to item: ScrollItem) {
         if item.animate {
             withAnimation {
-                scrollTo(item.id, anchor: item.anchor)
+                scrollTo(item.viewId, anchor: item.anchor)
             }
         } else {
-            scrollTo(item.id, anchor: item.anchor)
+            scrollTo(item.viewId, anchor: item.anchor)
         }
     }
 }

@@ -11,34 +11,25 @@
 
 import UIKit
 
-//-----------------------------------------------------------------------------------------------------------------------------------------------
 extension UIImage {
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
 	convenience init?(path: String) {
-
 		if let dataEncrypted = Data(path: path) {
 			if let dataDecrypted = Cryptor.decrypt(data: dataEncrypted) {
 				self.init(data: dataDecrypted)
 				return
 			}
 		}
-
 		return nil
 	}
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
 	class func image(_ path: String, size: CGFloat) -> UIImage? {
-
 		let image = UIImage(path: path)
 		return image?.square(to: size)
 	}
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
 	func square(to extent: CGFloat) -> UIImage {
-
 		var cropped: UIImage!
-
 		let width = self.size.width
 		let height = self.size.height
 
@@ -51,11 +42,9 @@ extension UIImage {
 			let ypos = (height - width) / 2
 			cropped = self.crop(x: 0, y: ypos, width: width, height: width)
 		}
-
 		return cropped.resize(width: extent, height: extent)
 	}
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
 	func resize(width: CGFloat, height: CGFloat) -> UIImage {
 
 		let size = CGSize(width: width, height: height)
@@ -69,7 +58,6 @@ extension UIImage {
 		return resized!
 	}
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
 	func crop(x: CGFloat, y: CGFloat, width: CGFloat, height: CGFloat) -> UIImage {
 
 		let rect = CGRect(x: x, y: y, width: width, height: height)

@@ -8,13 +8,11 @@
 import SwiftUI
 
 struct TimeSeparaterCell: View {
-    
     let date: Date
-    
     var body: some View {
-        Text(date.toString(dateStyle: .medium, timeStyle: .short).str)
+        Text("\(date.formatted(date: .abbreviated, time: .shortened))")
             .font(.system(size: UIFont.systemFontSize, weight: .medium))
             .frame(height: 50)
-            .foregroundStyle(.tertiary)
+            .foregroundStyle(.secondary)
     }
 }

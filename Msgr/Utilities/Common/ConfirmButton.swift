@@ -10,7 +10,8 @@ struct ConfirmButton<Content: View>: View {
 
     let title: String
     let action: () -> Void
-    let label: () -> Content
+    @ViewBuilder var label: () -> Content
+
     @State private var showDialog = false
     
     var body: some View {
@@ -20,11 +21,12 @@ struct ConfirmButton<Content: View>: View {
             label()
         }
         .confirmationDialog("Dialog", isPresented: $showDialog, actions: {
-            Button(role: .none, action: action) {
+            Button(role: .destructive, action: action) {
                 Text("Yes \(title)")
             }
         }, message: {
             Text("Are you sure you want to \(title)?")
-        }).labelsHidden()
+        })
+        .labelsHidden()
     }
 }

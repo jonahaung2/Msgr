@@ -9,18 +9,13 @@ import SwiftUI
 
 extension Con {
 
-    enum ConType {
-        case single(Contact.Payload)
-        case group([Contact.Payload])
-    }
-
     var themeColor: ThemeColor {
         get { ThemeColor(rawValue: themeColor_) ?? .Blue }
         set { themeColor_ = newValue.rawValue }
     }
     
     func bubbleColor(for msg: Msg) -> Color {
-        return msg.recieptType == .Send ? themeColor.color : bgImage == .None ? ChatKit.textBubbleColorIncomingPlain : ChatKit.textBubbleColorIncoming
+        return msg.isSender ? themeColor.color : bgImage == .None ? ChatKit.textBubbleColorIncomingPlain : ChatKit.textBubbleColorIncoming
     }
 
     var bgImage: BgImage {
@@ -28,42 +23,56 @@ extension Con {
         set { bgImage_ = newValue.rawValue }
     }
 
-    var contactPayload: Contact.Payload? {
-        members.filter{ $0.id != CurrentUser.id }.first
-    }
-    
-    var members: [Contact.Payload] {
-        get {
-            guard let members_ else { return [] }
-            var values = [Contact.Payload]()
-            members_.forEach { mem in
-                if let x = MessageCachingUtils.shared.userDisplayInfo(with: mem) {
-                    values.append(x)
-                }else if let contact = Contact.find(for: mem) {
-                    values.append(.init(contact))
-                }
-            }
-            return values
-        }
-        set {
-            members_ = newValue.compactMap{ $0.id }
-        }
-    }
 
-    var conType: ConType {
-        let filtered = members.filter{ $0.id != CurrentUser.id }
-        guard !filtered.isEmpty else {
-            return .single(.init(id: "", name: "", phone: "", photoURL: ""))
-        }
-        return filtered.count == 1 ? .single(filtered[0]) : .group(filtered)
-    }
+//    var members: [Contact.Payload] {
+//        get {
+//            var items = [Contact.Payload]()
+//            self.members_.forEach { id in
+//                if let item = MessageCachingUtils.shared.contactPayload(id: id) {
+//                    items.append(item)
+//                }
+//            }
+//            return items
+//        }
+//        set {
+//            members_ = newValue.compactMap{ $0.id }
+//        }
+//    }
 
-    var nameX: String {
-        switch conType {
-        case .single(let x):
-            return x.name
-        case .group(let members):
-            return name ?? members.prefix(3).compactMap{ $0.name.first }.map{ String($0) }.joined(separator: ", ")
-        }
-    }
+//    var contact: Contact? {
+//        guard !isGroup else {
+//            return nil
+//        }
+//        let ids = members_
+//        guard ids.count == 2 else {
+//            return nil
+//        }
+//        let contactId = ids.filter{ $0 != CurrentUser.shared.id }.first ?? ""
+//        return Contact.contact(for: contactId, context: CoreDataStack.shared.viewContext)
+//    }
+
+//    var title: String {
+//        get {
+//            if isGroup {
+//                return name ?? members.prefix(3).compactMap{ $0.name.first }.map{ String($0) }.joined(separator: ", ")
+//            } else {
+//                return contact?.name ?? "No Name"
+//            }
+//        }
+//        set {
+//            if isGroup {
+//                name = newValue
+//            } else {
+//
+//            }
+//        }
+//    }
+//
+//    var conProfileUrl: String? {
+//        if isGroup {
+//            return "https://media-exp1.licdn.com/dms/image/C5603AQEmuML1GXI9DQ/profile-displayphoto-shrink_800_800/0/1630504470059?e=1672272000&v=beta&t=lAsZRcQIW79CdEN3Fps8WTRGuotjMBN8c1PSttvOsWo"
+//        } else {
+//            return contact?.photoUrl
+//        }
+//    }
 }

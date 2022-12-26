@@ -28,8 +28,8 @@ struct DraggableModifier : ViewModifier {
     func body(content: Content) -> some View {
         content
             .offset(draggedOffset)
-            .highPriorityGesture(
-                DragGesture(minimumDistance: 10)
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 50)
                     .onChanged { value in
                         let offset = direction.offset(for: value.translation)
                         let distance = abs(offset.width)
@@ -48,8 +48,5 @@ struct DraggableModifier : ViewModifier {
                         }
                     }
             )
-            .onAppear {
-                draggedOffset = .zero
-            }
     }
 }

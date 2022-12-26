@@ -9,13 +9,13 @@ import SwiftUI
 
 struct CreateGroupContactPickerView: View {
 
-    @Environment(\.presentationMode) private var presentationMode
+    @Environment(\.dismiss) private var dismiss
     private var contacts = Contact.fecthAll()
     private var displayContacts: [Contact] {
         if searchText.isWhitespace {
             return contacts
         } else {
-            return contacts.filter{ $0.name.str.lowercased().contains(searchText.lowercased()) }
+            return contacts.filter{ $0.name.lowercased().contains(searchText.lowercased()) }
         }
     }
     @State private var pickedContacts = [Contact]()
@@ -29,7 +29,7 @@ struct CreateGroupContactPickerView: View {
                         ScrollView(.horizontal) {
                             HStack {
                                 ForEach(pickedContacts) { contact in
-                                    ContactAvatarView(id: contact.id.str, urlString: contact.photoUrl.str, size: 50)
+                                    ContactAvatarView(contact, .thumbnil, .medium)
                                         .transition(.scale)
                                 }
                             }
@@ -41,46 +41,45 @@ struct CreateGroupContactPickerView: View {
                 Section {
                     ForEach(displayContacts) { contact in
                         HStack {
-                            ContactAvatarView(id: contact.id.str, urlString: contact.photoUrl.str, size: 25)
-                            Text(contact.name.str)
+                            ContactAvatarView(contact, .thumbnil, .medium)
+                            Text(contact.name)
                             Spacer()
-                            Button {
-                                if pickedContacts.contains(where: { c in
-                                    c.id == contact.id
-                                }) {
-                                    withAnimation {
-                                        if let i = pickedContacts.firstIndex(of: contact) {
-                                            pickedContacts.remove(at: i)
-                                        }
-                                    }
-                                } else {
-                                    withAnimation {
-                                        pickedContacts.append(contact)
-                                    }
+
+                            if pickedContacts.contains(where: { c in
+                                c.id == contact.id
+                            }) {
+                                XIcon(.checkmark_circle_fill)
+                                    .foregroundColor(.accentColor)
+                            } else {
+                                XIcon(.circle)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .onTapGesture {
+                            if pickedContacts.contains(where: { c in
+                                c.id == contact.id
+                            }) {
+                                withAnimation {
+                                    pickedContacts.remove(contact)
                                 }
-                            } label: {
-                                if pickedContacts.contains(where: { c in
-                                    c.id == contact.id
-                                }) {
-                                    XIcon(.circle_fill)
-                                } else {
-                                    XIcon(.circle)
+                            } else {
+                                withAnimation {
+                                    pickedContacts.append(contact)
                                 }
                             }
-                            .buttonStyle(.borderless)
                         }
                     }
                 }
             }
             .navigationBarTitle("Create Group")
             .searchable(text: $searchText)
-            .navigationBarItems(trailing: nextButton)
+            .navigationBarItems(leading: CancelButton(dismiss: _dismiss, isProtected: true), trailing: nextButton)
         }
     }
 
     private var nextButton: some View {
         Text("Next")
-            .tapToPush(CreateGroupSaveView(contacts: pickedContacts, presentationMode: _presentationMode))
+            .tapToPush(CreateGroupSaveView(contacts: pickedContacts, dismiss: _dismiss))
             .disabled(pickedContacts.isEmpty)
     }
 }

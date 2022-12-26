@@ -34,39 +34,17 @@ struct Theme {
 
     static var generalBackground: Color {
         return Color.sectionBackground
-//        Color(red: 0.043, green: 0.467, blue: 0.494)
     }
 
     static func ellipsesTopLeading(forScheme scheme: ColorScheme) -> Color {
         return .background
-//        let any = Color(red: 0.039, green: 0.388, blue: 0.502, opacity: 0.81)
-//        let dark = Color(red: 0.000, green: 0.176, blue: 0.216, opacity: 80.0)
-//        switch scheme {
-//        case .light:
-//            return any
-//        case .dark:
-//            return dark
-//        @unknown default:
-//            return any
-//        }
     }
 
-        static func ellipsesTopTrailing(forScheme scheme: ColorScheme) -> Color {
-            return .accentColor
-//            let any = Color(red: 0.196, green: 0.796, blue: 0.329, opacity: 0.5)
-//            let dark = Color(red: 0.408, green: 0.698, blue: 0.420, opacity: 0.61)
-//            switch scheme {
-//            case .light:
-//                return any
-//            case .dark:
-//                return dark
-//            @unknown default:
-//                return any
-//            }
-        }
+    static func ellipsesTopTrailing(forScheme scheme: ColorScheme) -> Color {
+        return .accentColor
+    }
     static func ellipsesBottomTrailing(forScheme scheme: ColorScheme) -> Color {
         return .background
-
     }
 
     static func ellipsesBottomLeading(forScheme scheme: ColorScheme) -> Color {

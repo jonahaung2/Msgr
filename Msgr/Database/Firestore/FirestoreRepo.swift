@@ -9,6 +9,7 @@ import Foundation
 import FirebaseFirestore
 import FirebaseFirestoreSwift
 
+
 struct FirestoreRepo {
 
     static func add<T: Codable & Identifiable>(_ item: T, to ref: CollectionReference, completion: ((Error?)-> Void)? = nil) {
@@ -25,7 +26,7 @@ struct FirestoreRepo {
             return
         }
         do {
-            _ = try ref.document(id).setData(from: item, completion: completion)
+            _ = try ref.document(id).setData(from: item, merge: true, completion: completion)
         } catch {
             completion?(error)
         }
@@ -44,7 +45,7 @@ struct FirestoreRepo {
             let snapshot = try await query.getDocuments()
             return snapshot.documents.compactMap { try? $0.data(as: T.self)}
         } catch {
-            print(error)
+            Log(error)
             return []
         }
     }
@@ -60,6 +61,7 @@ struct FirestoreRepo {
         }
     }
     static func fetch<T: Codable>(query: Query, completion: @escaping (Result<T?, Error>) -> Void) {
+        query.limit(to: 1)
         query.getDocuments { snapshot, error in
             if let error {
                 completion(.failure(error))

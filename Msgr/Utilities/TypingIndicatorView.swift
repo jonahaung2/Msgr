@@ -34,7 +34,7 @@ public struct TypingIndicatorView: View {
                 )
         }
         .onAppear {
-            triggerHapticFeedback(style: .medium)
+            
             /// NOTE: This is needed because of a glitch when the animation is performed in a navigation bar.
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 isTyping = true
